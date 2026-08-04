@@ -1,10 +1,10 @@
 {
-  "urlId": "02zwznuL",
+  "urlId": "02zwzXq6",
   "createMode": "code",
-  "description": "竹笛学习",
+  "description": "竹笛学习app",
   "source": "import",
-  "createdAt": "2026-08-04T07:12:40.174Z",
-  "updatedAt": "2026-08-04T07:12:40.174Z",
+  "createdAt": "2026-08-04T09:48:56.016Z",
+  "updatedAt": "2026-08-04T09:48:56.016Z",
   "buildCommand": "npm install && npm run build",
   "distDir": "dist",
   "publicPath": "./"
