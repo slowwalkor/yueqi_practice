@@ -1,9 +1,0 @@
-{
-  "urlId": "02zwzcco",
-  "createMode": "code",
-  "description": "竹笛练习",
-  "source": "import",
-  "buildCommand": "npm install && npm run build",
-  "distDir": "dist",
-  "publicPath": "./"
-}
