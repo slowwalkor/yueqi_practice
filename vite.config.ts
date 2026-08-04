@@ -5,10 +5,13 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   base: './',
   build: {
+    assetsDir: '.',
     rollupOptions: {
       output: {
         manualChunks: undefined,
         inlineDynamicImports: true,
+        entryFileNames: 'bundle.js',
+        assetFileNames: '[name][extname]',
       }
     }
   },
