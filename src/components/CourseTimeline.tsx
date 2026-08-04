@@ -15,33 +15,44 @@ const TYPE_LABELS = {
 } as const
 
 export default function CourseTimeline() {
-  const [progress, setProgress] = useState<CourseProgress | null>(null)
-  const [expandedPhases, setExpandedPhases] = useState<Set<number>>(new Set())
+  // 初始值直接用默认进度，确保课程内容立即渲染，不等待异步存储
+  const [progress, setProgress] = useState<CourseProgress>({
+    currentPhase: 1,
+    completedLessons: [],
+    milestones: {
+      1: { completed: false, date: null },
+      2: { completed: false, date: null },
+      3: { completed: false, date: null },
+      4: { completed: false, date: null },
+      5: { completed: false, date: null },
+      6: { completed: false, date: null },
+    },
+    startDate: new Date().toISOString().slice(0, 10),
+  })
+  const [expandedPhases, setExpandedPhases] = useState<Set<number>>(new Set([1]))
   const [animatingId, setAnimatingId] = useState<number | null>(null)
 
   useEffect(() => {
+    // 后台加载实际进度，加载成功则更新UI
+    let cancelled = false
+    const timer = setTimeout(() => {
+      // 3秒超时保护：如果 localforage 挂起，不阻塞界面
+      if (!cancelled) cancelled = true
+    }, 3000)
+
     getProgress().then((p) => {
-      setProgress(p)
-      // Default expand current phase
-      setExpandedPhases(new Set([p.currentPhase]))
-    }).catch(() => {
-      // 存储异常时使用默认进度，保证课程内容正常显示
-      const fallback: CourseProgress = {
-        currentPhase: 1,
-        completedLessons: [],
-        milestones: {
-          1: { completed: false, date: null },
-          2: { completed: false, date: null },
-          3: { completed: false, date: null },
-          4: { completed: false, date: null },
-          5: { completed: false, date: null },
-          6: { completed: false, date: null },
-        },
-        startDate: new Date().toISOString().slice(0, 10),
+      if (!cancelled || true) {
+        // 无论是否超时，只要返回就更新
+        setProgress(p)
+        setExpandedPhases(new Set([p.currentPhase]))
       }
-      setProgress(fallback)
-      setExpandedPhases(new Set([1]))
+      clearTimeout(timer)
+    }).catch(() => {
+      clearTimeout(timer)
+      // 存储异常时保持默认进度，课程内容仍然可见
     })
+
+    return () => { cancelled = true; clearTimeout(timer) }
   }, [])
 
   const togglePhase = useCallback((phase: number) => {
@@ -65,7 +76,8 @@ export default function CourseTimeline() {
   }, [])
 
   if (!progress) {
-    return <div className="flex justify-center py-10"><div className="animate-spin w-6 h-6 border-2 border-bamboo border-t-transparent rounded-full" /></div>
+    // 不会触发：progress 已有初始值，保留以防TS类型报错
+    return null
   }
 
   const completedCount = progress.completedLessons.length

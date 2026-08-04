@@ -16,7 +16,9 @@ export class AudioContextManager {
     if (!this.audioCtx) {
       this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
     }
-    if (this.audioCtx.state === 'suspended') {
+    // 始终调用 resume()，不仅限于 suspended 状态
+    // iOS 有 'interrupted' 状态，某些浏览器 state 属性更新不同步
+    if (this.audioCtx.state !== 'running') {
       await this.audioCtx.resume()
     }
     this.setupRecovery()

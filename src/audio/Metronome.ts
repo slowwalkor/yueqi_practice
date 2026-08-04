@@ -7,8 +7,9 @@ export class Metronome {
   private isPlaying: boolean = false
   private nextNoteTime: number = 0
   private currentBeat: number = 0
-  private schedulerTimer: number | null = null
-  private scheduleAheadTime = 0.1 // 100ms提前调度
+  private schedulerTimer: ReturnType<typeof setInterval> | null = null
+  private scheduleAheadTime = 0.2 // 200ms提前调度，给移动端更多缓冲
+  private lookaheadInterval = 25 // 25ms轮询间隔（Web Audio标准做法）
   private onBeatCallback: ((beat: number, isStrong: boolean) => void) | null = null
 
   constructor(audioCtx: AudioContext) {
@@ -45,16 +46,24 @@ export class Metronome {
     if (this.isPlaying) return
     this.isPlaying = true
     this.currentBeat = 0
-    this.nextNoteTime = this.audioCtx.currentTime
-    this.schedule()
+    this.nextNoteTime = this.audioCtx.currentTime + 0.05 // 小延迟确保首拍可听
+    this.startScheduler()
   }
 
   stop() {
     this.isPlaying = false
     if (this.schedulerTimer !== null) {
-      cancelAnimationFrame(this.schedulerTimer)
+      clearInterval(this.schedulerTimer)
       this.schedulerTimer = null
     }
+  }
+
+  private startScheduler() {
+    // 使用 setInterval 而非 requestAnimationFrame
+    // RAF 与显示帧率绑定，在移动端会被节能限频甚至暂停
+    // setInterval 25ms 是 Web Audio 调度的标准做法
+    this.schedule()
+    this.schedulerTimer = setInterval(() => this.schedule(), this.lookaheadInterval)
   }
 
   private schedule() {
@@ -65,7 +74,6 @@ export class Metronome {
       this.nextNoteTime += 60 / this.bpm
       this.currentBeat = (this.currentBeat + 1) % this.getBeatsPerMeasure()
     }
-    this.schedulerTimer = requestAnimationFrame(() => this.schedule())
   }
 
   private playBeat(time: number, beat: number) {

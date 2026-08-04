@@ -20,10 +20,16 @@ export default function MetronomePage() {
 
   // 初始化并启动节拍器
   const startMetronome = useCallback(async () => {
+    // 每次启动都 ensure AudioContext running（移动端可能随时挂起）
     const ctx = await managerRef.current.initialize()
 
     if (!metronomeRef.current) {
       metronomeRef.current = new Metronome(ctx)
+    }
+
+    // 双重保险：如果ctx状态仍然不对，再 resume 一次
+    if (ctx.state !== 'running') {
+      await ctx.resume()
     }
 
     metronomeRef.current.setBPM(bpm)
