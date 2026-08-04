@@ -1,6 +1,10 @@
 {
+  "urlId": "02zwzzoT",
   "createMode": "code",
-  "description": "竹笛每日练 - 竹笛学习打卡H5应用",
+  "description": "竹笛每日练",
+  "source": "import",
+  "createdAt": "2026-08-04T04:05:29.597Z",
+  "updatedAt": "2026-08-04T04:05:29.598Z",
   "buildCommand": "npm install && npm run build",
   "distDir": "dist",
   "publicPath": "./"
