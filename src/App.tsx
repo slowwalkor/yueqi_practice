@@ -7,6 +7,10 @@ import ToolsPage from './pages/ToolsPage'
 import MetronomePage from './pages/MetronomePage'
 import TunerPage from './pages/TunerPage'
 import RecordPage from './pages/RecordPage'
+import ReferencePage from './pages/ReferencePage'
+import NotationPage from './pages/NotationPage'
+import FingeringPage from './pages/FingeringPage'
+import ScoresPage from './pages/ScoresPage'
 
 function App() {
   // v1.0.0 - Fixed metronome scheduler & course rendering
@@ -20,6 +24,10 @@ function App() {
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/tools/metronome" element={<MetronomePage />} />
           <Route path="/tools/tuner" element={<TunerPage />} />
+          <Route path="/tools/reference" element={<ReferencePage />} />
+          <Route path="/tools/notation" element={<NotationPage />} />
+          <Route path="/tools/fingering" element={<FingeringPage />} />
+          <Route path="/tools/scores" element={<ScoresPage />} />
           <Route path="/record" element={<RecordPage />} />
         </Routes>
       </main>
