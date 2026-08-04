@@ -9,6 +9,7 @@ import TunerPage from './pages/TunerPage'
 import RecordPage from './pages/RecordPage'
 
 function App() {
+  // v1.0.0 - Fixed metronome scheduler & course rendering
   return (
     <div className="flex flex-col h-screen bg-cream">
       <PWAInstallGuide />
