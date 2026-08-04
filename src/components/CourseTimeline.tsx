@@ -30,6 +30,7 @@ export default function CourseTimeline() {
     startDate: new Date().toISOString().slice(0, 10),
   })
   const [expandedPhases, setExpandedPhases] = useState<Set<number>>(new Set([1]))
+  const [expandedLessons, setExpandedLessons] = useState<Set<number>>(new Set())
   const [animatingId, setAnimatingId] = useState<number | null>(null)
 
   useEffect(() => {
@@ -62,6 +63,18 @@ export default function CourseTimeline() {
         next.delete(phase)
       } else {
         next.add(phase)
+      }
+      return next
+    })
+  }, [])
+
+  const toggleLesson = useCallback((lessonId: number) => {
+    setExpandedLessons((prev) => {
+      const next = new Set(prev)
+      if (next.has(lessonId)) {
+        next.delete(lessonId)
+      } else {
+        next.add(lessonId)
       }
       return next
     })
@@ -189,46 +202,116 @@ export default function CourseTimeline() {
                     {phase.lessons.map((lesson) => {
                       const isDone = progress.completedLessons.includes(lesson.id)
                       const isAnimating = animatingId === lesson.id
+                      const isLessonExpanded = expandedLessons.has(lesson.id)
                       return (
                         <div
                           key={lesson.id}
-                          className={`flex items-center gap-3 bg-white rounded-lg p-3 shadow-sm transition-all duration-300 ${
+                          className={`bg-white rounded-lg shadow-sm transition-all duration-300 ${
                             isAnimating ? 'scale-[0.97] bg-green-50' : ''
                           }`}
                         >
-                          {/* Check circle */}
-                          <button
-                            onClick={() => !isDone && handleComplete(lesson.id)}
-                            className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center touch-manipulation"
-                            style={{ minWidth: 44, minHeight: 44 }}
-                            disabled={isDone}
-                          >
-                            <div
-                              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${
-                                isDone
-                                  ? 'bg-bamboo text-white'
-                                  : 'border-2 border-gray-300 hover:border-bamboo'
-                              }`}
+                          <div className="flex items-center gap-3 p-3">
+                            {/* Check circle */}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); !isDone && handleComplete(lesson.id) }}
+                              className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center touch-manipulation"
+                              style={{ minWidth: 44, minHeight: 44 }}
+                              disabled={isDone}
                             >
-                              {isDone && (
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                            </div>
-                          </button>
+                              <div
+                                className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                  isDone
+                                    ? 'bg-bamboo text-white'
+                                    : 'border-2 border-gray-300 hover:border-bamboo'
+                                }`}
+                              >
+                                {isDone && (
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </div>
+                            </button>
 
-                          {/* Title + type */}
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium truncate ${isDone ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
-                              {lesson.title}
-                            </p>
+                            {/* Title + type - clickable to expand */}
+                            <button
+                              onClick={() => toggleLesson(lesson.id)}
+                              className="flex-1 min-w-0 text-left touch-manipulation"
+                              style={{ minHeight: 44 }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <p className={`text-sm font-medium truncate flex-1 ${isDone ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                                  {lesson.title}
+                                </p>
+                                <svg
+                                  className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${
+                                    isLessonExpanded ? 'rotate-180' : ''
+                                  }`}
+                                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
+                            </button>
+
+                            {/* Type tag */}
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${TYPE_COLORS[lesson.type]}`}>
+                              {TYPE_LABELS[lesson.type]}
+                            </span>
                           </div>
 
-                          {/* Type tag */}
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${TYPE_COLORS[lesson.type]}`}>
-                            {TYPE_LABELS[lesson.type]}
-                          </span>
+                          {/* Expanded description */}
+                          {isLessonExpanded && lesson.description && (
+                            <div className="px-3 pb-3 pt-0 ml-[56px] mr-2">
+                              <div className="border-t border-gray-100 pt-2.5 space-y-1.5">
+                                {lesson.description.split('\n').map((line, i) => {
+                                  if (line.startsWith('【每日时长】') || line.startsWith('【每日建议时长】')) {
+                                    return (
+                                      <p key={i} className="text-xs leading-relaxed">
+                                        <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
+                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                          </svg>
+                                          {line}
+                                        </span>
+                                      </p>
+                                    )
+                                  }
+                                  if (line.startsWith('【注意事项】')) {
+                                    return (
+                                      <p key={i} className="text-xs leading-relaxed">
+                                        <span className="inline-flex items-start gap-1 text-amber-700 font-medium">
+                                          <svg className="w-3 h-3 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                          </svg>
+                                          <span>{line}</span>
+                                        </span>
+                                      </p>
+                                    )
+                                  }
+                                  if (line.startsWith('【练习内容】')) {
+                                    return (
+                                      <p key={i} className="text-xs leading-relaxed text-gray-700 font-medium">
+                                        {line}
+                                      </p>
+                                    )
+                                  }
+                                  if (line.startsWith('【练习方法】')) {
+                                    return (
+                                      <p key={i} className="text-xs leading-relaxed text-gray-600">
+                                        {line}
+                                      </p>
+                                    )
+                                  }
+                                  return (
+                                    <p key={i} className="text-xs leading-relaxed text-gray-600">
+                                      {line}
+                                    </p>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )
                     })}
