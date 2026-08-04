@@ -24,6 +24,23 @@ export default function CourseTimeline() {
       setProgress(p)
       // Default expand current phase
       setExpandedPhases(new Set([p.currentPhase]))
+    }).catch(() => {
+      // 存储异常时使用默认进度，保证课程内容正常显示
+      const fallback: CourseProgress = {
+        currentPhase: 1,
+        completedLessons: [],
+        milestones: {
+          1: { completed: false, date: null },
+          2: { completed: false, date: null },
+          3: { completed: false, date: null },
+          4: { completed: false, date: null },
+          5: { completed: false, date: null },
+          6: { completed: false, date: null },
+        },
+        startDate: new Date().toISOString().slice(0, 10),
+      }
+      setProgress(fallback)
+      setExpandedPhases(new Set([1]))
     })
   }, [])
 

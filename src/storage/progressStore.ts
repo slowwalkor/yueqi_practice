@@ -26,13 +26,17 @@ function defaultProgress(): CourseProgress {
 }
 
 export async function getProgress(): Promise<CourseProgress> {
-  const data = await localforage.getItem<CourseProgress>(STORAGE_KEY)
-  if (!data) {
-    const init = defaultProgress()
-    await localforage.setItem(STORAGE_KEY, init)
-    return init
+  try {
+    const data = await localforage.getItem<CourseProgress>(STORAGE_KEY)
+    if (!data) {
+      const init = defaultProgress()
+      await localforage.setItem(STORAGE_KEY, init)
+      return init
+    }
+    return data
+  } catch {
+    return defaultProgress()
   }
-  return data
 }
 
 export async function completeLesson(lessonId: number): Promise<void> {

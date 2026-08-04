@@ -76,10 +76,15 @@ export default function MetronomePage() {
     document.addEventListener('visibilitychange', handleVisibility)
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility)
-      // 页面卸载时停止
-      metronomeRef.current?.stop()
     }
   }, [playing, stopMetronome])
+
+  // 页面卸载时停止节拍器（仅 unmount 触发）
+  useEffect(() => {
+    return () => {
+      metronomeRef.current?.stop()
+    }
+  }, [])
 
   return (
     <div className="flex flex-col items-center min-h-full px-4 py-6 bg-cream">
