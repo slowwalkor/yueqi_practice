@@ -1,10 +1,10 @@
 {
-  "urlId": "02zwzzoT",
+  "urlId": "02zwzdxx",
   "createMode": "code",
   "description": "竹笛每日练",
   "source": "import",
-  "createdAt": "2026-08-04T04:05:29.597Z",
-  "updatedAt": "2026-08-04T04:05:29.598Z",
+  "createdAt": "2026-08-04T04:16:13.805Z",
+  "updatedAt": "2026-08-04T04:16:13.805Z",
   "buildCommand": "npm install && npm run build",
   "distDir": "dist",
   "publicPath": "./"
