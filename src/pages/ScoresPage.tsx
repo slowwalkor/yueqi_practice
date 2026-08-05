@@ -4,7 +4,7 @@ import { PRACTICE_SCORES, Score } from '../data/practiceScores'
 import { FINGERING_CHART } from '../data/fingeringChart'
 import { useAudio } from '../context/AudioCtx'
 import { DiziSynth } from '../audio/DiziSynth'
-import { getFrequenciesForKey, NoteFreq } from '../audio/keyTransposer'
+import { getFrequenciesForKey, NoteFreq, SUPPORTED_KEYS, MusicalKey } from '../audio/keyTransposer'
 import { parseScore, ParsedNote } from '../audio/scoreParser'
 import { PracticePlayer } from '../audio/PracticePlayer'
 import FingeringDiagram from '../components/FingeringDiagram'
@@ -80,8 +80,9 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [speed, setSpeed] = useState(1)
 
-  const keyLetter = extractKeyFromScore(score.key)
-  const freqMap: NoteFreq[] = useMemo(() => getFrequenciesForKey(keyLetter as any), [keyLetter])
+  const defaultKey = extractKeyFromScore(score.key) as MusicalKey
+  const [selectedKey, setSelectedKey] = useState<MusicalKey>(defaultKey)
+  const freqMap: NoteFreq[] = useMemo(() => getFrequenciesForKey(selectedKey), [selectedKey])
   const parsedNotes: ParsedNote[] = useMemo(
     () => parseScore(score.lines, score.tempo, score.timeSignature),
     [score]
@@ -146,6 +147,18 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
     playerRef.current?.setSpeed(s)
   }, [])
 
+  const handleKeyChange = useCallback((key: MusicalKey) => {
+    if (key === selectedKey) return
+    // 如果正在播放，停止并重置
+    if (playerRef.current) {
+      playerRef.current.stop()
+      playerRef.current = null
+      setIsPlaying(false)
+      setCurrentIndex(-1)
+    }
+    setSelectedKey(key)
+  }, [selectedKey])
+
   // 将 lines 中所有 token 渲染为逐个 span
   const renderScoreTokens = () => {
     const elements: React.ReactNode[] = []
@@ -203,7 +216,7 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
           <span className="text-sm">返回</span>
         </button>
         <h2 className="text-base font-bold text-gray-800">{score.title}</h2>
-        <span className="text-xs text-gray-400">{score.key}</span>
+        <span className="text-xs text-gray-500 font-medium">当前：{selectedKey}调 筒音作5</span>
       </div>
 
       {/* 进度指示 */}
@@ -232,6 +245,24 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
             {isPlaying ? '⏸' : '▶'}
           </button>
           <div className="w-10" />
+        </div>
+
+        {/* 调性选择 */}
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <span className="text-xs text-gray-500 mr-1">调性</span>
+          {SUPPORTED_KEYS.map((k) => (
+            <button
+              key={k}
+              onClick={() => handleKeyChange(k)}
+              className={`min-h-[32px] px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                selectedKey === k
+                  ? 'bg-[#2d5016] text-white'
+                  : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              {k}
+            </button>
+          ))}
         </div>
 
         {/* 速度选择 */}
