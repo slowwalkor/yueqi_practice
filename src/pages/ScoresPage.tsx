@@ -17,10 +17,55 @@ const DIFFICULTY_COLORS = {
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5] as const
 
+// 组合标记 Unicode 码点
+const COMBINING_DOT_BELOW = '\u0323'
+const COMBINING_DOT_ABOVE = '\u0307'
+
+type DifficultyFilter = '全部' | '入门' | '初级' | '中级'
+
 /** 从 Score.key 中提取调号字母，如 "1=D 筒音作5" => "D" */
 function extractKeyFromScore(keyStr: string): string {
   const match = keyStr.match(/1=([A-G])/)
   return match ? match[1] : 'D'
+}
+
+/** 解析单个token为音名 */
+function tokenToNoteName(token: string): string | null {
+  if (token === '0') return '休止'
+  const digit = token.charAt(0)
+  if (digit < '1' || digit > '7') return null
+  const hasBelow = token.includes(COMBINING_DOT_BELOW)
+  const hasAbove = token.includes(COMBINING_DOT_ABOVE)
+  if (hasBelow) return `低音${digit}`
+  if (hasAbove) return `高音${digit}`
+  return `中音${digit}`
+}
+
+// ============================================================
+// MicroFingering — 超小型指法图，用于曲谱内联显示
+// ============================================================
+function MicroFingering({ fingers }: { fingers: boolean[] }) {
+  return (
+    <div className="flex items-center justify-center gap-[1px] mt-0.5">
+      {fingers.slice(0, 3).map((pressed, i) => (
+        <div
+          key={`L${i}`}
+          className={`w-[6px] h-[6px] rounded-full ${
+            pressed ? 'bg-gray-700' : 'border border-gray-400 bg-white'
+          }`}
+        />
+      ))}
+      <div className="w-[2px]" />
+      {fingers.slice(3, 6).map((pressed, i) => (
+        <div
+          key={`R${i}`}
+          className={`w-[6px] h-[6px] rounded-full ${
+            pressed ? 'bg-gray-700' : 'border border-gray-400 bg-white'
+          }`}
+        />
+      ))}
+    </div>
+  )
 }
 
 // ============================================================
@@ -71,7 +116,6 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
         (idx) => {
           setCurrentIndex(idx)
           if (idx === -1) {
-            // 播放完毕
             setIsPlaying(false)
             setCurrentIndex(-1)
             playerRef.current = null
@@ -120,7 +164,6 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
         }
 
         if (token === '-') {
-          // 延长符属于前一个音符，不单独计数
           elements.push(
             <span key={`ext-${lineIdx}-${elements.length}`} className="mx-0.5 font-mono text-gray-400">-</span>
           )
@@ -146,7 +189,6 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
           </span>
         )
       }
-      // 换行
       elements.push(<br key={`br-${lineIdx}`} />)
     }
     return elements
@@ -177,21 +219,18 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
       {/* 控制栏 */}
       <div className="bg-white rounded-xl p-4 shadow-sm mb-3">
         <div className="flex items-center justify-center gap-4 mb-3">
-          {/* 停止 */}
           <button
             onClick={handleStop}
             className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 active:scale-90 transition-transform"
           >
             ⏹
           </button>
-          {/* 播放/暂停 */}
           <button
             onClick={handlePlayPause}
             className="w-14 h-14 rounded-full bg-[#2d5016] flex items-center justify-center text-white text-2xl shadow-lg active:scale-90 transition-transform"
           >
             {isPlaying ? '⏸' : '▶'}
           </button>
-          {/* 占位对齐 */}
           <div className="w-10" />
         </div>
 
@@ -239,9 +278,79 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
 }
 
 // ============================================================
-// ScoreDetail — 曲谱详情（增加跟练入口）
+// ScoreDetail — 曲谱详情（带内联指法显示）
 // ============================================================
 function ScoreDetail({ score, onBack, onPractice }: { score: Score; onBack: () => void; onPractice: () => void }) {
+  /** 解析 lines 为带指法的渲染数据 */
+  const renderInlineFingering = () => {
+    const elements: React.ReactNode[] = []
+
+    for (let lineIdx = 0; lineIdx < score.lines.length; lineIdx++) {
+      const line = score.lines[lineIdx]
+      const tokens = line.split(/\s+/).filter(t => t.length > 0)
+      const lineElements: React.ReactNode[] = []
+
+      for (let tIdx = 0; tIdx < tokens.length; tIdx++) {
+        const token = tokens[tIdx]
+
+        // 小节线
+        if (token === '|') {
+          lineElements.push(
+            <div key={`bar-${lineIdx}-${tIdx}`} className="flex items-center px-0.5 self-stretch">
+              <div className="w-[1px] h-full bg-gray-300 min-h-[40px]" />
+            </div>
+          )
+          continue
+        }
+
+        // 延长符
+        if (token === '-') {
+          lineElements.push(
+            <div key={`ext-${lineIdx}-${tIdx}`} className="flex flex-col items-center justify-start w-8">
+              <span className="text-lg font-mono text-gray-400 leading-tight">-</span>
+              <div className="h-[10px]" />
+            </div>
+          )
+          continue
+        }
+
+        // 休止符
+        if (token === '0') {
+          lineElements.push(
+            <div key={`rest-${lineIdx}-${tIdx}`} className="flex flex-col items-center justify-start w-8">
+              <span className="text-lg font-mono text-gray-400 leading-tight">0</span>
+              <div className="h-[10px]" />
+            </div>
+          )
+          continue
+        }
+
+        // 音符
+        const noteName = tokenToNoteName(token)
+        const fingering = noteName ? FINGERING_CHART.find(f => f.note === noteName) : null
+
+        lineElements.push(
+          <div key={`note-${lineIdx}-${tIdx}`} className="flex flex-col items-center justify-start w-8">
+            <span className="text-lg font-mono text-gray-800 leading-tight">{token}</span>
+            {fingering ? (
+              <MicroFingering fingers={fingering.fingers} />
+            ) : (
+              <div className="h-[10px]" />
+            )}
+          </div>
+        )
+      }
+
+      elements.push(
+        <div key={`line-${lineIdx}`} className="flex flex-wrap items-start gap-y-3 mb-2">
+          {lineElements}
+        </div>
+      )
+    }
+
+    return elements
+  }
+
   return (
     <div>
       <button
@@ -274,12 +383,22 @@ function ScoreDetail({ score, onBack, onPractice }: { score: Score; onBack: () =
           </button>
         </div>
 
-        <div className="bg-cream rounded-lg p-4">
-          {score.lines.map((line, i) => (
-            <p key={i} className="font-mono text-lg leading-loose text-gray-800 tracking-wide">
-              {line}
-            </p>
-          ))}
+        {/* 曲谱区：内联指法显示 */}
+        <div className="bg-cream rounded-lg p-4 overflow-x-auto">
+          {renderInlineFingering()}
+        </div>
+
+        {/* 指法图例 */}
+        <div className="mt-3 flex items-center gap-3 text-[10px] text-gray-400">
+          <span>图例：</span>
+          <span className="flex items-center gap-0.5">
+            <span className="inline-block w-[6px] h-[6px] rounded-full bg-gray-700" /> 按住
+          </span>
+          <span className="flex items-center gap-0.5">
+            <span className="inline-block w-[6px] h-[6px] rounded-full border border-gray-400" /> 放开
+          </span>
+          <span className="text-gray-300">|</span>
+          <span>左3孔 · 右3孔</span>
         </div>
       </div>
 
@@ -294,18 +413,24 @@ function ScoreDetail({ score, onBack, onPractice }: { score: Score; onBack: () =
 }
 
 // ============================================================
-// ScoresPage — 主页
+// ScoresPage — 主页（含难度筛选）
 // ============================================================
 export default function ScoresPage() {
   const navigate = useNavigate()
   const [selectedScore, setSelectedScore] = useState<Score | null>(null)
   const [practiceMode, setPracticeMode] = useState(false)
+  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('全部')
 
-  const groupedScores = {
-    '入门': PRACTICE_SCORES.filter(s => s.difficulty === '入门'),
-    '初级': PRACTICE_SCORES.filter(s => s.difficulty === '初级'),
-    '中级': PRACTICE_SCORES.filter(s => s.difficulty === '中级'),
-  }
+  const filteredScores = useMemo(() => {
+    if (difficultyFilter === '全部') return PRACTICE_SCORES
+    return PRACTICE_SCORES.filter(s => s.difficulty === difficultyFilter)
+  }, [difficultyFilter])
+
+  const groupedScores = useMemo(() => ({
+    '入门': filteredScores.filter(s => s.difficulty === '入门'),
+    '初级': filteredScores.filter(s => s.difficulty === '初级'),
+    '中级': filteredScores.filter(s => s.difficulty === '中级'),
+  }), [filteredScores])
 
   // 跟练模式
   if (practiceMode && selectedScore) {
@@ -344,7 +469,29 @@ export default function ScoresPage() {
       </button>
 
       <h1 className="text-2xl font-bold text-bamboo mb-1">练习曲谱</h1>
-      <p className="text-gray-500 text-sm mb-6">课程配套曲目，按难度分级</p>
+      <p className="text-gray-500 text-sm mb-4">课程配套曲目，按难度分级 · 共{PRACTICE_SCORES.length}首</p>
+
+      {/* 难度筛选 */}
+      <div className="flex gap-2 mb-6 overflow-x-auto">
+        {(['全部', '入门', '初级', '中级'] as DifficultyFilter[]).map((level) => (
+          <button
+            key={level}
+            onClick={() => setDifficultyFilter(level)}
+            className={`min-h-[36px] px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+              difficultyFilter === level
+                ? 'bg-[#2d5016] text-white shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            {level}
+            {level !== '全部' && (
+              <span className="ml-1 opacity-70">
+                {PRACTICE_SCORES.filter(s => s.difficulty === level).length}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {Object.entries(groupedScores).map(([level, scores]) => (
         scores.length > 0 && (
