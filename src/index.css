@@ -3,8 +3,18 @@
 @tailwind utilities;
 
 :root {
+  --color-bamboo-50: #f0f7ed;
+  --color-bamboo-100: #d4e8cc;
   --color-bamboo: #2d5016;
   --color-bamboo-light: #4a7c23;
+  --color-bamboo-dark: #1a3b0a;
+  --color-ink: #2c2c2c;
+  --color-ink-light: #5a5a5a;
+  --color-ink-wash: #9b9b9b;
+  --color-paper: #f8f4ec;
+  --color-paper-warm: #f3ece0;
+  --color-vermilion: #c41d1d;
+  --color-gold: #b8860b;
   --color-cream: #f5f0e8;
   --color-amber: #d97706;
 }
@@ -12,10 +22,175 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
   -webkit-tap-highlight-color: transparent;
+  background-color: var(--color-paper);
 }
 
 /* 移动端安全区域适配 */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-/* v0.3 */
+
+/* ============================================
+   国风装饰类
+   ============================================ */
+
+/* 宣纸纹理背景 */
+.bg-paper-texture {
+  background-color: var(--color-paper);
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* 水墨渐变 */
+.ink-gradient {
+  background: linear-gradient(135deg, #2d5016 0%, #1a3b0a 50%, #0f2605 100%);
+}
+
+/* 竹节装饰分隔线 */
+.bamboo-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-bamboo), transparent);
+  position: relative;
+}
+.bamboo-divider::before {
+  content: '🎋';
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  transform: translateX(-50%);
+  font-size: 14px;
+}
+
+/* 毛笔字标题风格 */
+.title-brush {
+  font-family: 'STKaiti', 'KaiTi', 'FangSong', serif;
+  letter-spacing: 2px;
+}
+
+/* 区域标题（楷体 + 左侧竹绿竖条） */
+.section-title {
+  font-family: 'STKaiti', 'KaiTi', 'FangSong', serif;
+  letter-spacing: 1px;
+  padding-left: 12px;
+  border-left: 3px solid var(--color-bamboo);
+  position: relative;
+}
+
+/* 金色成就徽章 */
+.badge-gold {
+  background: linear-gradient(135deg, #d4a017 0%, #b8860b 50%, #8b6914 100%);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* 主按钮（竹绿渐变） */
+.btn-primary {
+  background: linear-gradient(135deg, #4a7c23 0%, #2d5016 100%);
+  color: #fff;
+  border-radius: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
+  transition: all 0.2s;
+}
+.btn-primary:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(45, 80, 22, 0.3);
+}
+
+/* 卡片卷轴头尾装饰 */
+.card-scroll {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.card-scroll::before,
+.card-scroll::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+  border-radius: 2px;
+}
+.card-scroll::before { top: 0; }
+.card-scroll::after { bottom: 0; }
+
+/* 页面进入动画 */
+.page-enter {
+  animation: fadeSlideUp 0.3s ease-out;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 古典边框卡片 */
+.card-classical {
+  border: 1px solid #d4e8cc;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(45, 80, 22, 0.06);
+}
+.card-classical::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(45, 80, 22, 0.1);
+  border-radius: 9px;
+  pointer-events: none;
+}
+
+/* 底部导航顶部竹绿渐变线 */
+.nav-top-line {
+  background: linear-gradient(90deg, transparent, var(--color-bamboo-100), var(--color-bamboo), var(--color-bamboo-100), transparent);
+  height: 2px;
+}
+
+/* 选中态底部竹叶装饰 */
+.tab-active-leaf::after {
+  content: '🌿';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  line-height: 1;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-bamboo-100);
+  border-radius: 2px;
+}
+
+/* Range input 国风样式 */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--color-bamboo-100), var(--color-bamboo-50));
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-bamboo);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(45, 80, 22, 0.3);
+  cursor: pointer;
+}

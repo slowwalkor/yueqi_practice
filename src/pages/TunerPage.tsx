@@ -73,7 +73,7 @@ export default function TunerPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-cream">
+    <div className="flex flex-col h-full bg-paper-texture page-enter">
       {/* 顶部栏 */}
       <div className="flex items-center px-4 py-3 border-b border-gray-100">
         <button

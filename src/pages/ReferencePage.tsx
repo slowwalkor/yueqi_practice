@@ -25,7 +25,7 @@ export default function ReferencePage() {
   ]
 
   return (
-    <div className="p-6 pb-24">
+    <div className="p-6 pb-24 page-enter">
       <button
         onClick={() => navigate('/tools')}
         className="flex items-center gap-1 text-bamboo mb-4"
@@ -34,22 +34,22 @@ export default function ReferencePage() {
         <span className="text-sm">返回工具</span>
       </button>
 
-      <h1 className="text-2xl font-bold text-bamboo mb-2">学习参考</h1>
-      <p className="text-gray-600 mb-6">零基础竹笛学习必备资料</p>
+      <h1 className="text-2xl font-bold font-brush text-bamboo mb-2">学习参考</h1>
+      <p className="text-ink-wash mb-6">零基础竹笛学习必备资料</p>
 
       <div className="flex flex-col gap-4">
         {entries.map((item) => (
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className="flex items-center gap-4 p-5 bg-white rounded-xl shadow-sm border border-gray-100 active:scale-[0.98] transition-transform text-left"
+            className="flex items-center gap-4 p-5 card-classical bg-paper active:scale-[0.98] transition-transform text-left"
           >
             <span className="text-4xl">{item.icon}</span>
             <div>
-              <h2 className="text-lg font-semibold text-gray-800">{item.title}</h2>
-              <p className="text-sm text-gray-500 mt-0.5">{item.desc}</p>
+              <h2 className="text-lg font-brush font-semibold text-ink">{item.title}</h2>
+              <p className="text-sm text-ink-wash mt-0.5">{item.desc}</p>
             </div>
-            <span className="ml-auto text-gray-300 text-xl">›</span>
+            <span className="ml-auto text-bamboo-100 text-xl">›</span>
           </button>
         ))}
       </div>

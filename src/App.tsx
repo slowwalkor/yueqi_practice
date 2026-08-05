@@ -15,7 +15,7 @@ import ScoresPage from './pages/ScoresPage'
 function App() {
   // v1.0.0 - Fixed metronome scheduler & course rendering
   return (
-    <div className="flex flex-col h-screen bg-cream">
+    <div className="flex flex-col h-screen bg-paper-texture">
       <PWAInstallGuide />
       <main className="flex-1 overflow-y-auto">
         <Routes>

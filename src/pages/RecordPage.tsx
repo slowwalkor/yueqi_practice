@@ -102,7 +102,7 @@ export default function RecordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream pb-24">
+    <div className="min-h-screen bg-paper-texture pb-24 page-enter">
       {/* Header */}
       <div className="px-5 pt-6 pb-4">
         <h1 className="text-2xl font-bold text-bamboo">练习录音</h1>

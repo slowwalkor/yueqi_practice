@@ -10,9 +10,9 @@ import { PracticePlayer } from '../audio/PracticePlayer'
 import FingeringDiagram from '../components/FingeringDiagram'
 
 const DIFFICULTY_COLORS = {
-  '入门': 'bg-green-100 text-green-700',
-  '初级': 'bg-blue-100 text-blue-700',
-  '中级': 'bg-orange-100 text-orange-700',
+  '入门': 'bg-bamboo-50 text-bamboo',
+  '初级': 'bg-blue-50 text-blue-700',
+  '中级': 'bg-paper-warm text-gold',
 } as const
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5] as const
@@ -193,9 +193,9 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
             key={`note-${idx}`}
             className={`
               inline-block mx-0.5 px-1 py-0.5 rounded font-mono text-lg transition-all duration-150
-              ${isCurrent ? 'bg-[#fef3c7] text-gray-900 font-bold scale-125 transform' : ''}
-              ${isPast ? 'text-gray-400' : ''}
-              ${!isCurrent && !isPast ? 'text-gray-800' : ''}
+              ${isCurrent ? 'bg-vermilion/20 text-vermilion font-bold scale-125 transform ring-1 ring-vermilion/30' : ''}
+              ${isPast ? 'text-ink-wash' : ''}
+              ${!isCurrent && !isPast ? 'text-ink' : ''}
             `}
           >
             {token}
@@ -225,22 +225,23 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
       </div>
 
       {/* 曲谱区 */}
-      <div className="flex-1 bg-white rounded-xl p-4 shadow-sm overflow-y-auto mb-3 leading-loose">
+      <div className="flex-1 card-classical bg-paper p-4 overflow-y-auto mb-3 leading-loose">
         {renderScoreTokens()}
       </div>
 
       {/* 控制栏 */}
-      <div className="bg-white rounded-xl p-4 shadow-sm mb-3">
+      <div className="bg-ink rounded-xl p-4 shadow-lg mb-3">
         <div className="flex items-center justify-center gap-4 mb-3">
           <button
             onClick={handleStop}
-            className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 active:scale-90 transition-transform"
+            className="w-10 h-10 rounded-full bg-ink-light/50 flex items-center justify-center text-white active:scale-90 transition-transform"
           >
             ⏹
           </button>
           <button
             onClick={handlePlayPause}
-            className="w-14 h-14 rounded-full bg-[#2d5016] flex items-center justify-center text-white text-2xl shadow-lg active:scale-90 transition-transform"
+            className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl shadow-lg active:scale-90 transition-transform"
+            style={{ background: 'linear-gradient(135deg, #4a7c23, #2d5016)' }}
           >
             {isPlaying ? '⏸' : '▶'}
           </button>
@@ -249,15 +250,15 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
 
         {/* 调性选择 */}
         <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="text-xs text-gray-500 mr-1">调性</span>
+          <span className="text-xs text-white/60 mr-1">调性</span>
           {SUPPORTED_KEYS.map((k) => (
             <button
               key={k}
               onClick={() => handleKeyChange(k)}
               className={`min-h-[32px] px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                 selectedKey === k
-                  ? 'bg-[#2d5016] text-white'
-                  : 'bg-gray-100 text-gray-600'
+                  ? 'bg-bamboo-light text-white'
+                  : 'bg-ink-light/30 text-white/70'
               }`}
             >
               {k}
@@ -267,15 +268,15 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
 
         {/* 速度选择 */}
         <div className="flex items-center justify-center gap-2">
-          <span className="text-xs text-gray-500 mr-1">速度</span>
+          <span className="text-xs text-white/60 mr-1">速度</span>
           {SPEED_OPTIONS.map((s) => (
             <button
               key={s}
               onClick={() => handleSpeedChange(s)}
               className={`min-h-[32px] px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                 speed === s
-                  ? 'bg-[#2d5016] text-white'
-                  : 'bg-gray-100 text-gray-600'
+                  ? 'bg-bamboo-light text-white'
+                  : 'bg-ink-light/30 text-white/70'
               }`}
             >
               {s}x
@@ -285,7 +286,7 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
       </div>
 
       {/* 底部指法栏 */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
+      <div className="fixed bottom-16 left-0 right-0 bg-paper/95 backdrop-blur-md px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] border-t border-bamboo-100">
         <div className="flex items-center justify-center gap-3">
           {currentFingering ? (
             <>
@@ -295,7 +296,7 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
                 compact
                 active
               />
-              <span className="text-sm font-medium text-[#2d5016]">{currentFingering.note}</span>
+              <span className="text-sm font-medium text-bamboo">{currentFingering.note}</span>
             </>
           ) : (
             <span className="text-sm text-gray-400">
@@ -392,9 +393,9 @@ function ScoreDetail({ score, onBack, onPractice }: { score: Score; onBack: () =
         <span className="text-sm">返回列表</span>
       </button>
 
-      <div className="bg-white rounded-xl p-5 shadow-sm mb-4">
+      <div className="card-classical bg-paper p-5 mb-4">
         <div className="flex items-center gap-2 mb-2">
-          <h2 className="text-xl font-bold text-gray-800">{score.title}</h2>
+          <h2 className="text-xl font-bold font-brush text-ink">{score.title}</h2>
           <span className={`text-xs px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[score.difficulty]}`}>
             {score.difficulty}
           </span>
@@ -408,14 +409,14 @@ function ScoreDetail({ score, onBack, onPractice }: { score: Score; onBack: () =
           {/* 跟练按钮 */}
           <button
             onClick={onPractice}
-            className="ml-auto min-h-[44px] px-4 py-2 rounded-full bg-[#2d5016] text-white text-xs font-medium flex items-center gap-1 active:scale-95 transition-transform"
+            className="ml-auto min-h-[44px] px-4 py-2 rounded-full text-white text-xs font-medium flex items-center gap-1 active:scale-95 transition-transform btn-primary"
           >
             ▶ 跟练
           </button>
         </div>
 
         {/* 曲谱区：内联指法显示 */}
-        <div className="bg-cream rounded-lg p-4 overflow-x-auto">
+        <div className="bg-paper-warm rounded-lg p-4 overflow-x-auto border border-bamboo-100/50">
           {renderInlineFingering()}
         </div>
 
@@ -433,8 +434,8 @@ function ScoreDetail({ score, onBack, onPractice }: { score: Score; onBack: () =
         </div>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-        <p className="text-xs text-amber-700">
+      <div className="bg-bamboo-50 border border-bamboo-100 rounded-lg px-4 py-3">
+        <p className="text-xs text-bamboo-dark">
           <strong>练习建议：</strong>先用手指空按熟悉指法，再慢速吹奏（比标注速度慢一半），
           最后逐渐加速到标准速度。
         </p>
@@ -490,7 +491,7 @@ export default function ScoresPage() {
 
   // 曲谱列表
   return (
-    <div className="p-6 pb-24">
+    <div className="p-6 pb-24 page-enter">
       <button
         onClick={() => navigate('/tools/reference')}
         className="flex items-center gap-1 text-bamboo mb-4"
@@ -499,8 +500,8 @@ export default function ScoresPage() {
         <span className="text-sm">返回参考</span>
       </button>
 
-      <h1 className="text-2xl font-bold text-bamboo mb-1">练习曲谱</h1>
-      <p className="text-gray-500 text-sm mb-4">课程配套曲目，按难度分级 · 共{PRACTICE_SCORES.length}首</p>
+      <h1 className="text-2xl font-bold font-brush text-bamboo mb-1">练习曲谱</h1>
+      <p className="text-ink-wash text-sm mb-4">课程配套曲目，按难度分级 · 共{PRACTICE_SCORES.length}首</p>
 
       {/* 难度筛选 */}
       <div className="flex gap-2 mb-6 overflow-x-auto">
@@ -510,8 +511,8 @@ export default function ScoresPage() {
             onClick={() => setDifficultyFilter(level)}
             className={`min-h-[36px] px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
               difficultyFilter === level
-                ? 'bg-[#2d5016] text-white shadow-sm'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'btn-primary shadow-sm'
+                : 'bg-bamboo-50 text-ink-light hover:bg-bamboo-100'
             }`}
           >
             {level}
@@ -538,7 +539,7 @@ export default function ScoresPage() {
                 <button
                   key={score.id}
                   onClick={() => setSelectedScore(score)}
-                  className="w-full flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100 active:scale-[0.98] transition-transform text-left"
+                  className="w-full flex items-center gap-3 p-4 card-classical bg-paper active:scale-[0.98] transition-transform text-left"
                 >
                   <div className="flex-1">
                     <h3 className="text-base font-medium text-gray-800">{score.title}</h3>

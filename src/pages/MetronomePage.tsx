@@ -93,7 +93,7 @@ export default function MetronomePage() {
   }, [])
 
   return (
-    <div className="flex flex-col items-center min-h-full px-4 py-6 bg-cream">
+    <div className="flex flex-col items-center min-h-full px-4 py-6 bg-paper-texture page-enter">
       {/* 顶部导航 */}
       <div className="w-full flex items-center mb-8">
         <button

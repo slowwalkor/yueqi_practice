@@ -5,7 +5,7 @@ export default function NotationPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="p-6 pb-24">
+    <div className="p-6 pb-24 page-enter">
       <button
         onClick={() => navigate('/tools/reference')}
         className="flex items-center gap-1 text-bamboo mb-4"

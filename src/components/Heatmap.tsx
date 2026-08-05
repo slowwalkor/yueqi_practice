@@ -11,10 +11,10 @@ function getDurationLevel(minutes: number): number {
 }
 
 const LEVEL_COLORS = [
-  'bg-gray-200',
-  'bg-green-200',
-  'bg-green-400',
-  'bg-green-600',
+  'bg-paper-warm',
+  'bg-bamboo-100',
+  'bg-bamboo-light',
+  'bg-bamboo',
 ]
 
 interface HeatmapProps {
@@ -86,8 +86,8 @@ export default function Heatmap({ refreshKey }: HeatmapProps) {
   }, [grid])
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
-      <h3 className="text-sm font-medium text-gray-600 mb-3">练习热力图</h3>
+    <div className="card-classical bg-paper p-4">
+      <h3 className="text-sm font-brush font-medium text-ink-light mb-3">练习热力图</h3>
 
       {/* Month labels */}
       <div className="flex mb-1 text-xs text-gray-400" style={{ paddingLeft: '0px' }}>

@@ -45,7 +45,7 @@ export default function CheckinPage() {
   const isCheckedIn = !!todayCheckin
 
   return (
-    <div className="p-4 pb-6 space-y-4">
+    <div className="p-4 pb-6 space-y-4 page-enter">
       {/* 区域1：统计卡片 */}
       <StreakCard stats={stats} />
 
@@ -55,12 +55,12 @@ export default function CheckinPage() {
       {/* 区域3：打卡表单 / 已完成状态 */}
       {isCheckedIn ? (
         <div
-          className={`bg-white rounded-xl p-5 shadow-sm text-center transition-transform duration-300 ${
+          className={`card-classical bg-paper p-5 text-center transition-transform duration-300 ${
             justChecked ? 'scale-105' : 'scale-100'
           }`}
         >
           <div className="text-4xl mb-2">✅</div>
-          <h3 className="text-lg font-bold text-bamboo mb-1">今日已完成练习</h3>
+          <h3 className="text-lg font-bold font-brush text-bamboo mb-1">今日已完成练习</h3>
           <p className="text-gray-600 text-sm">
             {todayCheckin.content} · {todayCheckin.duration}分钟
           </p>
@@ -69,8 +69,8 @@ export default function CheckinPage() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl p-5 shadow-sm space-y-4">
-          <h3 className="text-base font-bold text-gray-800">今日练习</h3>
+        <div className="card-classical bg-paper p-5 space-y-4">
+          <h3 className="text-base font-bold font-brush text-ink section-title">今日练习</h3>
 
           {/* 快捷标签 */}
           <div>
@@ -82,8 +82,8 @@ export default function CheckinPage() {
                   onClick={() => toggleTag(tag)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] ${
                     selectedTags.includes(tag)
-                      ? 'bg-bamboo text-white shadow-md scale-105'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'btn-primary shadow-md scale-105'
+                      : 'bg-bamboo-50 text-ink-light hover:bg-bamboo-100 border border-bamboo-100'
                   }`}
                 >
                   {tag}
@@ -131,10 +131,10 @@ export default function CheckinPage() {
             disabled={selectedTags.length === 0 || submitting}
             className={`w-full py-3 rounded-xl text-white font-bold text-base min-h-[48px] transition-all ${
               selectedTags.length === 0
-                ? 'bg-gray-300 cursor-not-allowed'
+                ? 'bg-ink-wash/50 cursor-not-allowed'
                 : submitting
-                ? 'bg-bamboo/70 scale-95'
-                : 'bg-bamboo hover:bg-bamboo-dark active:scale-95 shadow-md'
+                ? 'btn-primary opacity-70 scale-95'
+                : 'btn-primary active:scale-95'
             }`}
           >
             {submitting ? '提交中...' : '完成今日练习 ✓'}
@@ -142,7 +142,7 @@ export default function CheckinPage() {
         </div>
       )}
       {/* 数据导出 */}
-      <div className="bg-white rounded-xl p-4 shadow-sm">
+      <div className="card-classical bg-paper p-4">
         <button
           onClick={async () => {
             setExporting(true)

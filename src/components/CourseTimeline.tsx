@@ -109,14 +109,14 @@ export default function CourseTimeline() {
     <div className="pb-6">
       {/* Progress bar */}
       <div className="mb-6 px-1">
-        <div className="flex justify-between text-sm text-gray-600 mb-1.5">
-          <span>学习进度</span>
+        <div className="flex justify-between text-sm text-ink-light mb-1.5">
+          <span className="font-brush">学习进度</span>
           <span>{completedCount}/{TOTAL_LESSONS} 课时 · {percent}%</span>
         </div>
-        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+        <div className="w-full h-3 bg-bamboo-50 rounded-full overflow-hidden">
           <div
-            className="h-full bg-bamboo rounded-full transition-all duration-500"
-            style={{ width: `${percent}%` }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${percent}%`, background: 'linear-gradient(90deg, #4a7c23, #2d5016)' }}
           />
         </div>
       </div>
@@ -135,25 +135,29 @@ export default function CourseTimeline() {
             <div key={phase.phase} className="relative flex">
               {/* Vertical line + node */}
               <div className="flex flex-col items-center mr-4">
-                {/* Node */}
+                {/* Node - 竹叶造型 */}
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 border-2 ${
                     status === 'completed'
-                      ? 'bg-bamboo text-white'
+                      ? 'bg-bamboo text-white border-bamboo shadow-md'
                       : status === 'current'
-                      ? 'border-2 border-bamboo text-bamboo bg-white'
-                      : 'border-2 border-gray-300 text-gray-400 bg-white'
+                      ? 'border-bamboo text-bamboo bg-bamboo-50'
+                      : 'border-ink-wash/40 text-ink-wash bg-paper'
                   }`}
                 >
                   {status === 'completed' ? '✓' : phase.phase}
                 </div>
-                {/* Connector line */}
+                {/* Connector line - 竹节装饰 */}
                 {idx < CURRICULUM.length - 1 && (
-                  <div
-                    className={`w-0.5 flex-1 min-h-[20px] ${
-                      status === 'completed' ? 'bg-bamboo' : 'bg-gray-200'
-                    }`}
-                  />
+                  <div className="relative w-0.5 flex-1 min-h-[20px]">
+                    <div className={`absolute inset-0 ${
+                      status === 'completed' ? 'bg-bamboo' : 'bg-bamboo-100'
+                    }`} />
+                    {/* 竹节 */}
+                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-1 rounded-full ${
+                      status === 'completed' ? 'bg-bamboo-dark' : 'bg-bamboo-100'
+                    }`} />
+                  </div>
                 )}
               </div>
 
@@ -162,15 +166,15 @@ export default function CourseTimeline() {
                 {/* Header - clickable */}
                 <button
                   onClick={() => togglePhase(phase.phase)}
-                  className="w-full text-left bg-white rounded-xl shadow-sm p-4 active:bg-gray-50 transition-colors"
+                  className="w-full text-left card-classical bg-paper p-4 active:bg-paper-warm transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-medium text-gray-400">{phase.month}</span>
-                        <h3 className="font-semibold text-gray-900 truncate">{phase.title}</h3>
+                        <span className="text-xs font-medium text-ink-wash">{phase.month}</span>
+                        <h3 className="font-brush font-semibold text-ink truncate">{phase.title}</h3>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 truncate">{phase.goal}</p>
+                      <p className="text-xs text-ink-wash mt-1 truncate">{phase.goal}</p>
                     </div>
                     <div className="flex items-center gap-2 ml-3 shrink-0">
                       <span className="text-xs font-medium text-gray-500">
@@ -189,9 +193,9 @@ export default function CourseTimeline() {
                   {/* Milestone */}
                   <div className="mt-2 flex items-center gap-1.5">
                     {milestoneAchieved ? (
-                      <span className="text-xs text-amber font-medium">🏆 里程碑已达成</span>
+                      <span className="badge-gold">🏆 里程碑已达成</span>
                     ) : (
-                      <span className="text-xs text-gray-400">🎯 {phase.milestone}</span>
+                      <span className="text-xs text-ink-wash">🎯 {phase.milestone}</span>
                     )}
                   </div>
                 </button>
@@ -206,8 +210,8 @@ export default function CourseTimeline() {
                       return (
                         <div
                           key={lesson.id}
-                          className={`bg-white rounded-lg shadow-sm transition-all duration-300 ${
-                            isAnimating ? 'scale-[0.97] bg-green-50' : ''
+                          className={`card-classical bg-paper transition-all duration-300 ${
+                            isAnimating ? 'scale-[0.97] bg-bamboo-50' : ''
                           }`}
                         >
                           <div className="flex items-center gap-3 p-3">

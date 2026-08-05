@@ -29,7 +29,7 @@ export default function FingeringPage() {
   }, [initialize, freqs])
 
   return (
-    <div className="p-6 pb-24">
+    <div className="p-6 pb-24 page-enter">
       <button
         onClick={() => navigate('/tools/reference')}
         className="flex items-center gap-1 text-bamboo mb-4"
@@ -46,8 +46,8 @@ export default function FingeringPage() {
             onClick={() => setSelectedKey(k)}
             className={`min-h-[44px] px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               selectedKey === k
-                ? 'bg-[#2d5016] text-white'
-                : 'bg-white text-gray-600 border border-gray-200'
+                ? 'btn-primary'
+                : 'bg-paper border border-bamboo-100 text-ink-light'
             }`}
           >
             {k}调
@@ -55,14 +55,14 @@ export default function FingeringPage() {
         ))}
       </div>
 
-      <h1 className="text-2xl font-bold text-bamboo mb-1">{selectedKey}调竹笛指法表（筒音作5）</h1>
-      <p className="text-gray-500 text-sm mb-2">点击卡片试听音色 · 6孔竹笛</p>
+      <h1 className="text-2xl font-bold font-brush text-bamboo mb-1">{selectedKey}调竹笛指法表（筒音作5）</h1>
+      <p className="text-ink-wash text-sm mb-2">点击卡片试听音色 · 6孔竹笛</p>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-6">
-        <p className="text-xs text-amber-700">
+      <div className="bg-bamboo-50 border border-bamboo-100 rounded-lg px-3 py-2 mb-6">
+        <p className="text-xs text-bamboo-dark">
           <strong>图例：</strong>
-          <span className="inline-block w-4 h-4 rounded-full bg-[#2d5016] align-middle mx-1" />按住
-          <span className="inline-block w-4 h-4 rounded-full border-2 border-gray-300 bg-white align-middle mx-1" />放开
+          <span className="inline-block w-4 h-4 rounded-full bg-bamboo-dark align-middle mx-1" />按住
+          <span className="inline-block w-4 h-4 rounded-full border-2 border-bamboo-light/50 bg-paper align-middle mx-1" />放开
         </p>
       </div>
 
@@ -71,8 +71,8 @@ export default function FingeringPage() {
           <div
             key={note.note}
             onClick={() => handlePlay(note, index)}
-            className={`bg-white rounded-xl p-4 shadow-sm cursor-pointer active:scale-[0.97] transition-all duration-200 ${
-              activeNote === note.note ? 'border-2 border-[#2d5016] shadow-md' : 'border border-transparent'
+            className={`card-classical bg-paper p-4 cursor-pointer active:scale-[0.97] transition-all duration-200 ${
+              activeNote === note.note ? 'border-2 border-bamboo shadow-md' : ''
             }`}
           >
             <div className="flex items-center justify-between mb-3">
@@ -103,7 +103,7 @@ export default function FingeringPage() {
             </div>
 
             {note.tips && (
-              <p className="text-xs text-gray-500 text-center bg-cream rounded-lg px-3 py-1.5">
+              <p className="text-xs text-ink-light text-center bg-bamboo-50 rounded-lg px-3 py-1.5">
                 💡 {note.tips}
               </p>
             )}
