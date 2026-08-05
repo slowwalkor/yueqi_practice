@@ -262,53 +262,125 @@ export default function CourseTimeline() {
 
                           {/* Expanded description */}
                           {isLessonExpanded && lesson.description && (
-                            <div className="px-3 pb-3 pt-0 ml-[56px] mr-2">
-                              <div className="border-t border-gray-100 pt-2.5 space-y-1.5">
-                                {lesson.description.split('\n').map((line, i) => {
-                                  if (line.startsWith('【每日时长】') || line.startsWith('【每日建议时长】')) {
-                                    return (
-                                      <p key={i} className="text-xs leading-relaxed">
-                                        <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
-                                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                          </svg>
+                            <div className="px-3 pb-3 pt-0 ml-2 mr-2">
+                              <div className="border-t border-gray-100 pt-2.5 space-y-3">
+                                {/* Video Section */}
+                                {lesson.videoUrl && (
+                                  <div className="rounded-lg bg-gradient-to-r from-red-50 to-pink-50 p-3">
+                                    <h4 className="text-xs font-semibold text-red-700 mb-2 flex items-center gap-1">
+                                      <span>📹</span> 视频教学
+                                    </h4>
+                                    <a
+                                      href={lesson.videoUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-3 bg-white rounded-lg p-2.5 shadow-sm active:bg-gray-50 transition-colors"
+                                    >
+                                      <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                                        <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                          <path d="M8 5v14l11-7z" />
+                                        </svg>
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-gray-800 truncate">{lesson.videoTitle || '观看教学视频'}</p>
+                                        <p className="text-[10px] text-gray-500">点击前往B站观看</p>
+                                      </div>
+                                      <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                      </svg>
+                                    </a>
+                                  </div>
+                                )}
+
+                                {/* Image Guides Section */}
+                                {lesson.imageGuides && lesson.imageGuides.length > 0 && (
+                                  <div className="rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-3">
+                                    <h4 className="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1">
+                                      <span>📖</span> 图文分步教学
+                                    </h4>
+                                    <div className="space-y-2">
+                                      {lesson.imageGuides.map((guide, i) => (
+                                        <div key={i} className="flex items-start gap-2.5 bg-white rounded-lg p-2.5 shadow-sm">
+                                          <span className="text-2xl leading-none shrink-0 mt-0.5">{guide.emoji}</span>
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-semibold text-gray-800">{guide.title}</p>
+                                            <p className="text-[11px] text-gray-600 leading-relaxed mt-0.5">{guide.description}</p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Tips / Common Mistakes Section */}
+                                {lesson.tips && lesson.tips.length > 0 && (
+                                  <div className="rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 p-3">
+                                    <h4 className="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1">
+                                      <span>⚠️</span> 常见问题
+                                    </h4>
+                                    <div className="space-y-1.5">
+                                      {lesson.tips.map((tip, i) => (
+                                        <p key={i} className="text-[11px] leading-relaxed text-gray-700 bg-white rounded-md px-2.5 py-1.5 shadow-sm">
+                                          {tip}
+                                        </p>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Original Description Section */}
+                                <div className="rounded-lg bg-gray-50 p-3">
+                                  <h4 className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                                    <span>📝</span> 练习要点
+                                  </h4>
+                                  <div className="space-y-1.5">
+                                    {lesson.description.split('\n').map((line, i) => {
+                                      if (line.startsWith('【每日时长】') || line.startsWith('【每日建议时长】')) {
+                                        return (
+                                          <p key={i} className="text-xs leading-relaxed">
+                                            <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
+                                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                              </svg>
+                                              {line}
+                                            </span>
+                                          </p>
+                                        )
+                                      }
+                                      if (line.startsWith('【注意事项】')) {
+                                        return (
+                                          <p key={i} className="text-xs leading-relaxed">
+                                            <span className="inline-flex items-start gap-1 text-amber-700 font-medium">
+                                              <svg className="w-3 h-3 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                              </svg>
+                                              <span>{line}</span>
+                                            </span>
+                                          </p>
+                                        )
+                                      }
+                                      if (line.startsWith('【练习内容】')) {
+                                        return (
+                                          <p key={i} className="text-xs leading-relaxed text-gray-700 font-medium">
+                                            {line}
+                                          </p>
+                                        )
+                                      }
+                                      if (line.startsWith('【练习方法】')) {
+                                        return (
+                                          <p key={i} className="text-xs leading-relaxed text-gray-600">
+                                            {line}
+                                          </p>
+                                        )
+                                      }
+                                      return (
+                                        <p key={i} className="text-xs leading-relaxed text-gray-600">
                                           {line}
-                                        </span>
-                                      </p>
-                                    )
-                                  }
-                                  if (line.startsWith('【注意事项】')) {
-                                    return (
-                                      <p key={i} className="text-xs leading-relaxed">
-                                        <span className="inline-flex items-start gap-1 text-amber-700 font-medium">
-                                          <svg className="w-3 h-3 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                          </svg>
-                                          <span>{line}</span>
-                                        </span>
-                                      </p>
-                                    )
-                                  }
-                                  if (line.startsWith('【练习内容】')) {
-                                    return (
-                                      <p key={i} className="text-xs leading-relaxed text-gray-700 font-medium">
-                                        {line}
-                                      </p>
-                                    )
-                                  }
-                                  if (line.startsWith('【练习方法】')) {
-                                    return (
-                                      <p key={i} className="text-xs leading-relaxed text-gray-600">
-                                        {line}
-                                      </p>
-                                    )
-                                  }
-                                  return (
-                                    <p key={i} className="text-xs leading-relaxed text-gray-600">
-                                      {line}
-                                    </p>
-                                  )
-                                })}
+                                        </p>
+                                      )
+                                    })}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           )}
