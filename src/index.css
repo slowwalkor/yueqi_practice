@@ -3,18 +3,24 @@
 @tailwind utilities;
 
 :root {
+  --color-ink-black: #1a1a1a;       /* 浓墨 */
+  --color-ink-grey: #4a4a4a;        /* 淡墨 */
+  --color-bamboo-deep: #1a3a0a;     /* 深竹 */
+  --color-bamboo: #2d5016;          /* 竹绿 */
+  --color-bamboo-light: #4a7c23;    /* 嫩竹 */
   --color-bamboo-50: #f0f7ed;
   --color-bamboo-100: #d4e8cc;
-  --color-bamboo: #2d5016;
-  --color-bamboo-light: #4a7c23;
-  --color-bamboo-dark: #1a3b0a;
+  --color-jade: #e8f4e0;            /* 玉色 */
+  --color-vermilion: #c0392b;       /* 朱砂 */
+  --color-bronze: #8B6914;          /* 古铜 */
+  --color-gold: #d4a574;            /* 鎏金 */
+  --color-paper: #faf6ee;           /* 宣纸 */
+  --color-paper-dark: #f0e8d8;      /* 旧纸 */
+  --color-cloud: #f7f3eb;           /* 云白 */
   --color-ink: #2c2c2c;
   --color-ink-light: #5a5a5a;
   --color-ink-wash: #9b9b9b;
-  --color-paper: #f8f4ec;
   --color-paper-warm: #f3ece0;
-  --color-vermilion: #c41d1d;
-  --color-gold: #b8860b;
   --color-cream: #f5f0e8;
   --color-amber: #d97706;
 }
@@ -31,33 +37,39 @@ body {
 }
 
 /* ============================================
-   国风装饰类
+   国风装饰类（加强版）
    ============================================ */
 
-/* 宣纸纹理背景 */
+/* 宣纸纹理背景 - 加强版 */
 .bg-paper-texture {
   background-color: var(--color-paper);
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-image: 
+    /* 宣纸纤维感 */
+    radial-gradient(ellipse at 20% 50%, rgba(45, 80, 22, 0.02) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(139, 105, 20, 0.015) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 80%, rgba(45, 80, 22, 0.015) 0%, transparent 45%),
+    /* 原纹理加强 */
+    url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
 }
 
 /* 水墨渐变 */
 .ink-gradient {
-  background: linear-gradient(135deg, #2d5016 0%, #1a3b0a 50%, #0f2605 100%);
+  background: linear-gradient(135deg, #2d5016 0%, #1a3a0a 50%, #0f2605 100%);
+}
+
+/* 水墨风分隔线 */
+.ink-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #2d5016 20%, #2d5016 80%, transparent);
+  opacity: 0.3;
+  margin: 16px 0;
 }
 
 /* 竹节装饰分隔线 */
 .bamboo-divider {
-  height: 2px;
+  height: 1px;
   background: linear-gradient(90deg, transparent, var(--color-bamboo), transparent);
-  position: relative;
-}
-.bamboo-divider::before {
-  content: '🎋';
-  position: absolute;
-  left: 50%;
-  top: -10px;
-  transform: translateX(-50%);
-  font-size: 14px;
+  opacity: 0.4;
 }
 
 /* 毛笔字标题风格 */
@@ -77,7 +89,7 @@ body {
 
 /* 金色成就徽章 */
 .badge-gold {
-  background: linear-gradient(135deg, #d4a017 0%, #b8860b 50%, #8b6914 100%);
+  background: linear-gradient(135deg, #d4a574 0%, #8B6914 100%);
   color: #fff;
   padding: 2px 10px;
   border-radius: 9999px;
@@ -100,6 +112,32 @@ body {
   box-shadow: 0 2px 6px rgba(45, 80, 22, 0.3);
 }
 
+/* 古风卡片 - 加强版 */
+.card-guofeng {
+  background: var(--color-paper);
+  border: 1px solid rgba(45, 80, 22, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(45, 80, 22, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+.card-guofeng::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #2d5016, transparent);
+  opacity: 0.4;
+}
+
+/* 古典边框卡片 */
+.card-classical {
+  border: 1px solid rgba(45, 80, 22, 0.12);
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(45, 80, 22, 0.05);
+}
+
 /* 卡片卷轴头尾装饰 */
 .card-scroll {
   position: relative;
@@ -112,12 +150,46 @@ body {
   position: absolute;
   left: 10%;
   right: 10%;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
   border-radius: 2px;
 }
 .card-scroll::before { top: 0; }
 .card-scroll::after { bottom: 0; }
+
+/* 印章按钮 */
+.btn-seal {
+  background: var(--color-vermilion);
+  color: white;
+  border-radius: 4px;
+  font-family: 'STKaiti', 'KaiTi', serif;
+  box-shadow: 0 2px 4px rgba(192, 57, 43, 0.3);
+  border: 1px solid rgba(192, 57, 43, 0.5);
+}
+.btn-seal:active {
+  transform: scale(0.95);
+}
+
+/* 墨绿按钮 */
+.btn-bamboo {
+  background: linear-gradient(135deg, #2d5016, #1a3a0a);
+  color: #f0e8d8;
+  border-radius: 8px;
+  font-family: 'STKaiti', 'KaiTi', serif;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(45, 80, 22, 0.25);
+  transition: all 0.2s;
+}
+.btn-bamboo:active {
+  transform: scale(0.96);
+}
+
+/* 底部导航顶部竹绿渐变线 */
+.nav-top-line {
+  background: linear-gradient(90deg, transparent, var(--color-bamboo-100), var(--color-bamboo), var(--color-bamboo-100), transparent);
+  height: 1px;
+  opacity: 0.6;
+}
 
 /* 页面进入动画 */
 .page-enter {
@@ -127,39 +199,6 @@ body {
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-/* 古典边框卡片 */
-.card-classical {
-  border: 1px solid #d4e8cc;
-  border-radius: 12px;
-  position: relative;
-  box-shadow: 0 2px 8px rgba(45, 80, 22, 0.06);
-}
-.card-classical::before {
-  content: '';
-  position: absolute;
-  inset: 3px;
-  border: 1px solid rgba(45, 80, 22, 0.1);
-  border-radius: 9px;
-  pointer-events: none;
-}
-
-/* 底部导航顶部竹绿渐变线 */
-.nav-top-line {
-  background: linear-gradient(90deg, transparent, var(--color-bamboo-100), var(--color-bamboo), var(--color-bamboo-100), transparent);
-  height: 2px;
-}
-
-/* 选中态底部竹叶装饰 */
-.tab-active-leaf::after {
-  content: '🌿';
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 8px;
-  line-height: 1;
 }
 
 /* 滚动条美化 */

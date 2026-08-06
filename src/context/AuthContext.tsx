@@ -31,9 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 获取当前会话
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      if (!session?.user) {
-        setIsGuest(true)
-      }
+      // 注意：如果无 session，不设 isGuest=true！让 App.tsx 守卫自动显示登录页
       setLoading(false)
     })
 
@@ -77,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut()
     }
     setUser(null)
-    setIsGuest(true)
+    setIsGuest(false)
   }, [])
 
   const enterGuestMode = useCallback(() => {
