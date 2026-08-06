@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import BottomNav from './components/BottomNav'
 import PWAInstallGuide from './components/PWAInstallGuide'
+import AchievementToast from './components/AchievementToast'
 import LoginPage from './pages/LoginPage'
 import CheckinPage from './pages/CheckinPage'
 import CoursePage from './pages/CoursePage'
@@ -13,6 +14,8 @@ import ReferencePage from './pages/ReferencePage'
 import NotationPage from './pages/NotationPage'
 import FingeringPage from './pages/FingeringPage'
 import ScoresPage from './pages/ScoresPage'
+import AchievementsPage from './pages/AchievementsPage'
+import ProfilePage from './pages/ProfilePage'
 
 function App() {
   const { user, loading, isGuest } = useAuth()
@@ -36,11 +39,13 @@ function App() {
 
   return (
     <div className="flex flex-col h-screen bg-paper-texture">
+      <AchievementToast />
       <PWAInstallGuide />
       <main className="flex-1 overflow-y-auto">
         <Routes>
           <Route path="/" element={<CheckinPage />} />
           <Route path="/course" element={<CoursePage />} />
+          <Route path="/practice" element={<ScoresPage />} />
           <Route path="/tools" element={<ToolsPage />} />
           <Route path="/tools/metronome" element={<MetronomePage />} />
           <Route path="/tools/tuner" element={<TunerPage />} />
@@ -48,7 +53,9 @@ function App() {
           <Route path="/tools/notation" element={<NotationPage />} />
           <Route path="/tools/fingering" element={<FingeringPage />} />
           <Route path="/tools/scores" element={<ScoresPage />} />
-          <Route path="/record" element={<RecordPage />} />
+          <Route path="/tools/record" element={<RecordPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/achievements" element={<AchievementsPage />} />
           <Route path="/login" element={<LoginPage />} />
         </Routes>
       </main>

@@ -194,3 +194,53 @@ input[type="range"]::-webkit-slider-thumb {
   box-shadow: 0 2px 6px rgba(45, 80, 22, 0.3);
   cursor: pointer;
 }
+
+/* ============================================
+   游戏化系统动画
+   ============================================ */
+
+/* XP 飘字动画 */
+@keyframes xpFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  60% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.8); }
+}
+.animate-xp-float {
+  animation: xpFloat 2s ease-out forwards;
+}
+
+/* XP 进度条填充动画 */
+@keyframes xpBarFill {
+  from { width: 0; }
+}
+.xp-bar-fill {
+  animation: xpBarFill 1s ease-out;
+}
+
+/* 成就解锁光效 */
+.achievement-unlocked {
+  box-shadow: 0 0 12px rgba(184, 134, 11, 0.15), 0 2px 8px rgba(45, 80, 22, 0.06);
+}
+
+/* 成就印章动效 */
+.achievement-stamp {
+  animation: stampPulse 2s ease-in-out infinite;
+}
+@keyframes stampPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* 隐藏滚动条 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 安全区域内距 */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 12px);
+}

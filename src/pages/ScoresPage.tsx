@@ -7,7 +7,12 @@ import { DiziSynth } from '../audio/DiziSynth'
 import { getFrequenciesForKey, NoteFreq, SUPPORTED_KEYS, MusicalKey } from '../audio/keyTransposer'
 import { parseScore, ParsedNote } from '../audio/scoreParser'
 import { PracticePlayer } from '../audio/PracticePlayer'
+import { PracticeScorer, type PracticeResult, type NoteScore } from '../audio/PracticeScorer'
+import { AudioContextManager } from '../audio/AudioContextManager'
 import FingeringDiagram from '../components/FingeringDiagram'
+import PitchIndicator from '../components/PitchIndicator'
+import PracticeReport from '../components/PracticeReport'
+import db from '../storage/db'
 
 const DIFFICULTY_COLORS = {
   '入门': 'bg-bamboo-50 text-bamboo',
@@ -69,7 +74,376 @@ function MicroFingering({ fingers }: { fingers: boolean[] }) {
 }
 
 // ============================================================
-// PracticeView — 跟练子组件
+// AIPracticeView — AI跟练模式（含评分）
+// ============================================================
+function AIPracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
+  const { initialize } = useAudio()
+  const synthRef = useRef<DiziSynth | null>(null)
+  const playerRef = useRef<PracticePlayer | null>(null)
+  const scorerRef = useRef<PracticeScorer | null>(null)
+
+  const [currentIndex, setCurrentIndex] = useState(-1)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [speed, setSpeed] = useState(0.75) // AI模式默认较慢
+  const [noteStatuses, setNoteStatuses] = useState<Map<number, NoteScore['status']>>(new Map())
+  const [practiceResult, setPracticeResult] = useState<PracticeResult | null>(null)
+
+  // 实时音准状态
+  const [detectedFreq, setDetectedFreq] = useState<number | null>(null)
+  const [clarity, setClarity] = useState(0)
+  const pitchPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const defaultKey = extractKeyFromScore(score.key) as MusicalKey
+  const selectedKey = defaultKey
+  const freqMap: NoteFreq[] = useMemo(() => getFrequenciesForKey(selectedKey), [selectedKey])
+  const parsedNotes: ParsedNote[] = useMemo(
+    () => parseScore(score.lines, score.tempo, score.timeSignature),
+    [score]
+  )
+
+  // 当前音符对应的指法
+  const currentFingering = useMemo(() => {
+    if (currentIndex < 0 || currentIndex >= parsedNotes.length) return null
+    const note = parsedNotes[currentIndex]
+    if (note.isRest) return null
+    return FINGERING_CHART.find(f => f.note === note.noteName) || null
+  }, [currentIndex, parsedNotes])
+
+  // 当前目标音符信息
+  const currentTarget = useMemo(() => {
+    if (currentIndex < 0 || currentIndex >= parsedNotes.length) return { note: '', freq: 0 }
+    const pn = parsedNotes[currentIndex]
+    if (pn.isRest) return { note: '休止', freq: 0 }
+    const found = freqMap.find(f => f.note === pn.noteName)
+    return { note: pn.noteName, freq: found?.freq || 0 }
+  }, [currentIndex, parsedNotes, freqMap])
+
+  // 清理
+  useEffect(() => {
+    return () => {
+      playerRef.current?.stop()
+      scorerRef.current?.destroy()
+      if (pitchPollRef.current) clearInterval(pitchPollRef.current)
+    }
+  }, [])
+
+  // 音高轮询
+  const startPitchPolling = useCallback(() => {
+    if (pitchPollRef.current) clearInterval(pitchPollRef.current)
+    pitchPollRef.current = setInterval(() => {
+      if (!scorerRef.current) return
+      const pitch = scorerRef.current.getCurrentPitch()
+      if (pitch) {
+        setDetectedFreq(pitch.freq)
+        setClarity(pitch.clarity)
+      } else {
+        setDetectedFreq(null)
+        setClarity(0)
+      }
+    }, 50)
+  }, [])
+
+  const stopPitchPolling = useCallback(() => {
+    if (pitchPollRef.current) {
+      clearInterval(pitchPollRef.current)
+      pitchPollRef.current = null
+    }
+    setDetectedFreq(null)
+    setClarity(0)
+  }, [])
+
+  // 前一个音符索引引用，用于检测音符切换
+  const prevIndexRef = useRef(-1)
+
+  const handleStart = useCallback(async () => {
+    await initialize()
+
+    const ctx = AudioContextManager.getInstance().getContext()
+    if (!ctx) return
+
+    // 创建 scorer
+    const scorer = new PracticeScorer(ctx)
+    scorer.setTitle(score.title)
+    await scorer.start()
+    scorerRef.current = scorer
+
+    // 创建 synth & player
+    if (!synthRef.current) {
+      synthRef.current = new DiziSynth()
+    }
+
+    prevIndexRef.current = -1
+    setNoteStatuses(new Map())
+
+    playerRef.current = new PracticePlayer(
+      synthRef.current,
+      parsedNotes,
+      freqMap,
+      (idx) => {
+        // 音符切换回调
+        if (idx === -1) {
+          // 播放结束：commit最后一个音符并结束
+          if (prevIndexRef.current >= 0 && scorerRef.current) {
+            const lastNote = scorerRef.current.commitNote()
+            setNoteStatuses(prev => new Map(prev).set(lastNote.noteIndex, lastNote.status))
+          }
+          // 获取结果
+          if (scorerRef.current) {
+            const result = scorerRef.current.stop()
+            setPracticeResult(result)
+            // 保存到本地
+            savePracticeResult(result)
+          }
+          setIsPlaying(false)
+          setCurrentIndex(-1)
+          stopPitchPolling()
+          playerRef.current = null
+          return
+        }
+
+        // commit前一个音符
+        if (prevIndexRef.current >= 0 && scorerRef.current) {
+          const prevNote = parsedNotes[prevIndexRef.current]
+          if (!prevNote.isRest) {
+            const ns = scorerRef.current.commitNote()
+            setNoteStatuses(prev => new Map(prev).set(ns.noteIndex, ns.status))
+          }
+        }
+
+        // 设置新的目标
+        setCurrentIndex(idx)
+        const note = parsedNotes[idx]
+        if (!note.isRest && scorerRef.current) {
+          const found = freqMap.find(f => f.note === note.noteName)
+          if (found) {
+            scorerRef.current.setCurrentTarget(note.noteName, found.freq, idx)
+          }
+        }
+        prevIndexRef.current = idx
+      }
+    )
+    playerRef.current.setSpeed(speed)
+    playerRef.current.start()
+    setIsPlaying(true)
+    startPitchPolling()
+  }, [initialize, parsedNotes, freqMap, speed, score.title, startPitchPolling, stopPitchPolling])
+
+  const handleStop = useCallback(() => {
+    if (scorerRef.current) {
+      // commit当前音符
+      if (prevIndexRef.current >= 0) {
+        scorerRef.current.commitNote()
+      }
+      const result = scorerRef.current.stop()
+      setPracticeResult(result)
+      savePracticeResult(result)
+    }
+    playerRef.current?.stop()
+    playerRef.current = null
+    scorerRef.current = null
+    setIsPlaying(false)
+    setCurrentIndex(-1)
+    stopPitchPolling()
+  }, [stopPitchPolling])
+
+  const handleRetry = useCallback(() => {
+    setPracticeResult(null)
+    setNoteStatuses(new Map())
+    setCurrentIndex(-1)
+    prevIndexRef.current = -1
+  }, [])
+
+  // 渲染曲谱 tokens（带实时状态标记）
+  const renderScoreTokens = () => {
+    const elements: React.ReactNode[] = []
+    let noteIdx = 0
+
+    for (let lineIdx = 0; lineIdx < score.lines.length; lineIdx++) {
+      const line = score.lines[lineIdx]
+      const tokens = line.split(/\s+/).filter(t => t.length > 0)
+
+      for (const token of tokens) {
+        if (token === '|') {
+          elements.push(
+            <span key={`bar-${lineIdx}-${elements.length}`} className="mx-1 text-gray-300 font-mono">|</span>
+          )
+          continue
+        }
+
+        if (token === '-') {
+          elements.push(
+            <span key={`ext-${lineIdx}-${elements.length}`} className="mx-0.5 font-mono text-gray-400">-</span>
+          )
+          continue
+        }
+
+        const idx = noteIdx
+        noteIdx++
+        const isCurrent = idx === currentIndex
+        const isPast = currentIndex >= 0 && idx < currentIndex
+        const status = noteStatuses.get(idx)
+
+        elements.push(
+          <span
+            key={`note-${idx}`}
+            className={`
+              inline-flex flex-col items-center mx-0.5 px-1 py-0.5 rounded font-mono text-lg transition-all duration-150
+              ${isCurrent ? 'bg-vermilion/20 text-vermilion font-bold scale-125 transform ring-1 ring-vermilion/30' : ''}
+              ${isPast && !isCurrent ? 'text-ink-wash' : ''}
+              ${!isCurrent && !isPast ? 'text-ink' : ''}
+            `}
+          >
+            <span>{token}</span>
+            {status && (
+              <span className={`text-[10px] leading-none ${
+                status === 'perfect' ? 'text-emerald-500' :
+                status === 'good' ? 'text-blue-500' :
+                status === 'off' ? 'text-yellow-600' : 'text-red-400'
+              }`}>
+                {status === 'perfect' ? '✓' : status === 'good' ? '○' : status === 'off' ? '△' : '✗'}
+              </span>
+            )}
+          </span>
+        )
+      }
+      elements.push(<br key={`br-${lineIdx}`} />)
+    }
+    return elements
+  }
+
+  return (
+    <div className="flex flex-col min-h-[calc(100vh-6rem)]">
+      {/* 顶部导航 */}
+      <div className="flex items-center justify-between mb-2">
+        <button onClick={onExit} className="flex items-center gap-1 text-bamboo">
+          <span>←</span>
+          <span className="text-sm">返回</span>
+        </button>
+        <h2 className="text-base font-bold text-gray-800 flex items-center gap-1">
+          <span className="text-vermilion">🎯</span> AI跟练
+        </h2>
+        <span className="text-xs text-gray-500 font-medium">{selectedKey}调</span>
+      </div>
+
+      {/* 曲目标题 */}
+      <div className="text-center mb-2">
+        <span className="text-sm font-brush text-ink">{score.title}</span>
+        <span className="text-xs text-ink-wash ml-2">
+          第 {currentIndex >= 0 ? currentIndex + 1 : 0} / {parsedNotes.length} 音
+        </span>
+      </div>
+
+      {/* 音准指示器 */}
+      {isPlaying && (
+        <div className="mb-2 card-classical bg-paper rounded-lg">
+          <PitchIndicator
+            targetNote={currentTarget.note}
+            targetFreq={currentTarget.freq}
+            detectedFreq={detectedFreq}
+            clarity={clarity}
+          />
+        </div>
+      )}
+
+      {/* 曲谱区 */}
+      <div className="flex-1 card-classical bg-paper p-4 overflow-y-auto mb-3 leading-loose">
+        {renderScoreTokens()}
+      </div>
+
+      {/* 控制栏 */}
+      <div className="bg-ink rounded-xl p-4 shadow-lg mb-3">
+        <div className="flex items-center justify-center gap-4 mb-3">
+          {isPlaying ? (
+            <button
+              onClick={handleStop}
+              className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl shadow-lg active:scale-90 transition-transform bg-vermilion"
+            >
+              ⏹
+            </button>
+          ) : (
+            <button
+              onClick={handleStart}
+              className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl shadow-lg active:scale-90 transition-transform"
+              style={{ background: 'linear-gradient(135deg, #c41d1d, #8b1515)' }}
+            >
+              🎯
+            </button>
+          )}
+        </div>
+
+        {!isPlaying && (
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-xs text-white/60 mr-1">速度</span>
+            {([0.5, 0.75, 1] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setSpeed(s)}
+                className={`min-h-[32px] px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                  speed === s
+                    ? 'bg-vermilion/80 text-white'
+                    : 'bg-ink-light/30 text-white/70'
+                }`}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
+        )}
+
+        {isPlaying && (
+          <p className="text-center text-xs text-white/60">🎤 正在聆听您的吹奏...</p>
+        )}
+      </div>
+
+      {/* 底部指法栏 */}
+      <div className="fixed bottom-16 left-0 right-0 bg-paper/95 backdrop-blur-md px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)] border-t border-bamboo-100">
+        <div className="flex items-center justify-center gap-3">
+          {currentFingering ? (
+            <>
+              <FingeringDiagram
+                fingers={currentFingering.fingers}
+                note={currentFingering.note}
+                compact
+                active
+              />
+              <span className="text-sm font-medium text-bamboo">{currentFingering.note}</span>
+            </>
+          ) : (
+            <span className="text-sm text-gray-400">
+              {currentIndex >= 0 && parsedNotes[currentIndex]?.isRest ? '🤫 休止' : '等待开始...'}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 练习报告弹窗 */}
+      {practiceResult && (
+        <PracticeReport
+          result={practiceResult}
+          onRetry={handleRetry}
+          onBack={onExit}
+        />
+      )}
+    </div>
+  )
+}
+
+/** 保存练习记录 */
+async function savePracticeResult(result: PracticeResult): Promise<void> {
+  try {
+    const existing = await db.getItem<PracticeResult[]>('practice-scores')
+    const records = existing || []
+    records.push(result)
+    // 只保留最近100条
+    if (records.length > 100) records.splice(0, records.length - 100)
+    await db.setItem('practice-scores', records)
+  } catch (e) {
+    console.warn('[AI跟练] 保存练习记录失败', e)
+  }
+}
+
+// ============================================================
+// PracticeView — 跟练子组件（原有普通模式）
 // ============================================================
 function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
   const { initialize } = useAudio()
@@ -312,7 +686,7 @@ function PracticeView({ score, onExit }: { score: Score; onExit: () => void }) {
 // ============================================================
 // ScoreDetail — 曲谱详情（带内联指法显示）
 // ============================================================
-function ScoreDetail({ score, onBack, onPractice }: { score: Score; onBack: () => void; onPractice: () => void }) {
+function ScoreDetail({ score, onBack, onPractice, onAIPractice }: { score: Score; onBack: () => void; onPractice: () => void; onAIPractice: () => void }) {
   /** 解析 lines 为带指法的渲染数据 */
   const renderInlineFingering = () => {
     const elements: React.ReactNode[] = []
@@ -413,6 +787,13 @@ function ScoreDetail({ score, onBack, onPractice }: { score: Score; onBack: () =
           >
             ▶ 跟练
           </button>
+          <button
+            onClick={onAIPractice}
+            className="min-h-[44px] px-4 py-2 rounded-full text-white text-xs font-medium flex items-center gap-1 active:scale-95 transition-transform"
+            style={{ background: 'linear-gradient(135deg, #c41d1d, #8b1515)' }}
+          >
+            🎯 AI跟练
+          </button>
         </div>
 
         {/* 曲谱区：内联指法显示 */}
@@ -451,6 +832,7 @@ export default function ScoresPage() {
   const navigate = useNavigate()
   const [selectedScore, setSelectedScore] = useState<Score | null>(null)
   const [practiceMode, setPracticeMode] = useState(false)
+  const [aiPracticeMode, setAiPracticeMode] = useState(false)
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('全部')
 
   const filteredScores = useMemo(() => {
@@ -463,6 +845,18 @@ export default function ScoresPage() {
     '初级': filteredScores.filter(s => s.difficulty === '初级'),
     '中级': filteredScores.filter(s => s.difficulty === '中级'),
   }), [filteredScores])
+
+  // AI跟练模式
+  if (aiPracticeMode && selectedScore) {
+    return (
+      <div className="p-6 pb-24">
+        <AIPracticeView
+          score={selectedScore}
+          onExit={() => setAiPracticeMode(false)}
+        />
+      </div>
+    )
+  }
 
   // 跟练模式
   if (practiceMode && selectedScore) {
@@ -484,6 +878,7 @@ export default function ScoresPage() {
           score={selectedScore}
           onBack={() => setSelectedScore(null)}
           onPractice={() => setPracticeMode(true)}
+          onAIPractice={() => setAiPracticeMode(true)}
         />
       </div>
     )
