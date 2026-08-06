@@ -1,4 +1,4 @@
-import localforage from 'localforage'
+import db from './db'
 
 export interface CourseProgress {
   currentPhase: number
@@ -27,10 +27,10 @@ function defaultProgress(): CourseProgress {
 
 export async function getProgress(): Promise<CourseProgress> {
   try {
-    const data = await localforage.getItem<CourseProgress>(STORAGE_KEY)
+    const data = await db.getItem<CourseProgress>(STORAGE_KEY)
     if (!data) {
       const init = defaultProgress()
-      await localforage.setItem(STORAGE_KEY, init)
+      await db.setItem(STORAGE_KEY, init)
       return init
     }
     return data
@@ -43,7 +43,7 @@ export async function completeLesson(lessonId: number): Promise<void> {
   const progress = await getProgress()
   if (!progress.completedLessons.includes(lessonId)) {
     progress.completedLessons.push(lessonId)
-    await localforage.setItem(STORAGE_KEY, progress)
+    await db.setItem(STORAGE_KEY, progress)
   }
 }
 
@@ -57,9 +57,9 @@ export async function completeMilestone(phase: number): Promise<void> {
   if (phase >= progress.currentPhase && phase < 6) {
     progress.currentPhase = phase + 1
   }
-  await localforage.setItem(STORAGE_KEY, progress)
+  await db.setItem(STORAGE_KEY, progress)
 }
 
 export async function resetProgress(): Promise<void> {
-  await localforage.setItem(STORAGE_KEY, defaultProgress())
+  await db.setItem(STORAGE_KEY, defaultProgress())
 }

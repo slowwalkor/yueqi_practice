@@ -1,4 +1,5 @@
 import db from './db'
+import { supabase } from '../lib/supabase'
 
 export interface RecordingMeta {
   id: string
@@ -74,4 +75,55 @@ export function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+// ============================================
+// 云端同步
+// ============================================
+
+/**
+ * 上传录音 Blob 到 Supabase Storage
+ */
+export async function uploadRecordingToCloud(id: string): Promise<{ error?: string }> {
+  if (!supabase) return { error: '未配置云服务' }
+
+  const { data: userData } = await supabase.auth.getUser()
+  const userId = userData.user?.id
+  if (!userId) return { error: '请先登录' }
+
+  const blob = await getRecordingBlob(id)
+  if (!blob) return { error: '录音文件不存在' }
+
+  const path = `${userId}/${id}`
+  const { error } = await supabase.storage
+    .from('recordings')
+    .upload(path, blob, {
+      contentType: blob.type || 'audio/webm',
+      upsert: true
+    })
+
+  if (error) return { error: error.message }
+  return {}
+}
+
+/**
+ * 从 Supabase Storage 下载录音
+ */
+export async function downloadRecordingFromCloud(id: string): Promise<{ error?: string }> {
+  if (!supabase) return { error: '未配置云服务' }
+
+  const { data: userData } = await supabase.auth.getUser()
+  const userId = userData.user?.id
+  if (!userId) return { error: '请先登录' }
+
+  const path = `${userId}/${id}`
+  const { data, error } = await supabase.storage
+    .from('recordings')
+    .download(path)
+
+  if (error || !data) return { error: error?.message || '下载失败' }
+
+  // 保存到本地
+  await db.setItem(`${BLOB_PREFIX}${id}`, data)
+  return {}
 }

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.1",
     "localforage": "^1.10.0",
     "pitchy": "^4.1.0",
     "react": "^19.1.0",
