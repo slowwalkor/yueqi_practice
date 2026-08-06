@@ -1,50 +1,78 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+type TabMode = 'login' | 'register'
+
+// 将 Supabase 英文错误转为中文
+function friendlyError(msg: string): string {
+  if (msg === '__email_confirm__') return '注册成功！请查收邮箱确认链接后再登录'
+  if (msg.includes('Invalid login credentials')) return '邮箱或密码错误'
+  if (msg.includes('User already registered')) return '该邮箱已注册，请直接登录'
+  if (msg.includes('Password should be at least 6 characters')) return '密码至少需要6位'
+  if (msg.includes('Unable to validate email address')) return '请输入有效的邮箱地址'
+  if (msg.includes('Email rate limit exceeded')) return '操作过于频繁，请稍后再试'
+  return msg
+}
+
 export default function LoginPage() {
-  const { signInWithPhone, verifyOTP, signInWithWechat, enterGuestMode } = useAuth()
-  const [phone, setPhone] = useState('')
-  const [otp, setOtp] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
+  const { signInWithEmail, signUpWithEmail, enterGuestMode } = useAuth()
+  const navigate = useNavigate()
+
+  const [tab, setTab] = useState<TabMode>('login')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
-  const [sending, setSending] = useState(false)
-  const [verifying, setVerifying] = useState(false)
+  const [success, setSuccess] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSendOTP = async () => {
-    if (!phone.match(/^1\d{10}$/)) {
-      setError('请输入正确的手机号')
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (!email || !password) {
+      setError('请填写邮箱和密码')
       return
     }
-    setSending(true)
-    setError('')
-    const result = await signInWithPhone(phone)
-    setSending(false)
-    if (result.error) {
-      setError(result.error)
+
+    if (tab === 'register') {
+      if (password.length < 6) {
+        setError('密码至少需要6位')
+        return
+      }
+      if (password !== confirmPassword) {
+        setError('两次输入的密码不一致')
+        return
+      }
+    }
+
+    setLoading(true)
+
+    if (tab === 'login') {
+      const result = await signInWithEmail(email, password)
+      setLoading(false)
+      if (result.error) {
+        setError(friendlyError(result.error))
+      } else {
+        navigate('/')
+      }
     } else {
-      setOtpSent(true)
-    }
-  }
-
-  const handleVerify = async () => {
-    if (otp.length < 4) {
-      setError('请输入验证码')
-      return
-    }
-    setVerifying(true)
-    setError('')
-    const result = await verifyOTP(phone, otp)
-    setVerifying(false)
-    if (result.error) {
-      setError(result.error)
-    }
-  }
-
-  const handleWechat = async () => {
-    setError('')
-    const result = await signInWithWechat()
-    if (result.error) {
-      setError(result.error)
+      const result = await signUpWithEmail(email, password)
+      setLoading(false)
+      if (result.error) {
+        const msg = friendlyError(result.error)
+        if (result.error === '__email_confirm__') {
+          setSuccess(msg)
+        } else {
+          setError(msg)
+        }
+      } else {
+        // 没有开启邮箱确认，直接登录成功
+        setSuccess('注册成功！')
+        setTimeout(() => navigate('/'), 800)
+      }
     }
   }
 
@@ -81,79 +109,96 @@ export default function LoginPage() {
 
         {/* 登录卡片 — 白色半透明毛玻璃 */}
         <div className="w-full rounded-2xl bg-white/85 backdrop-blur-xl p-6 shadow-xl border border-white/50">
-          {/* 手机号输入 — 底部单线 */}
-          <div className="mb-5">
-            <label className="text-xs text-[#4a4a4a] block mb-3" style={{ fontFamily: 'STKaiti, KaiTi, serif' }}>
-              手机号登录
-            </label>
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
+          {/* Tab 切换 */}
+          <div className="flex justify-center gap-8 mb-6">
+            <button
+              onClick={() => { setTab('login'); setError(''); setSuccess('') }}
+              className={`relative pb-2 text-sm transition-colors ${
+                tab === 'login' ? 'text-[#1a1a1a] font-semibold' : 'text-[#9b9b9b]'
+              }`}
+              style={{ fontFamily: 'STKaiti, KaiTi, serif' }}
+            >
+              登录
+              {tab === 'login' && (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-[2px] bg-[#c0392b] rounded-full" />
+              )}
+            </button>
+            <button
+              onClick={() => { setTab('register'); setError(''); setSuccess('') }}
+              className={`relative pb-2 text-sm transition-colors ${
+                tab === 'register' ? 'text-[#1a1a1a] font-semibold' : 'text-[#9b9b9b]'
+              }`}
+              style={{ fontFamily: 'STKaiti, KaiTi, serif' }}
+            >
+              注册
+              {tab === 'register' && (
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-[2px] bg-[#c0392b] rounded-full" />
+              )}
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            {/* 邮箱输入 */}
+            <div className="mb-4">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="请输入邮箱"
+                className="w-full px-0 py-2 border-0 border-b border-[#2d5016]/20 bg-transparent text-[#1a1a1a] text-base
+                           placeholder:text-[#9b9b9b] focus:outline-none focus:border-[#2d5016]/50 transition-colors"
+              />
+            </div>
+
+            {/* 密码输入 */}
+            <div className="mb-4">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={tab === 'register' ? '请输入密码（至少6位）' : '请输入密码'}
+                className="w-full px-0 py-2 border-0 border-b border-[#2d5016]/20 bg-transparent text-[#1a1a1a] text-base
+                           placeholder:text-[#9b9b9b] focus:outline-none focus:border-[#2d5016]/50 transition-colors"
+              />
+            </div>
+
+            {/* 确认密码（仅注册模式） */}
+            {tab === 'register' && (
+              <div className="mb-4">
                 <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="请输入手机号"
-                  maxLength={11}
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="请确认密码"
                   className="w-full px-0 py-2 border-0 border-b border-[#2d5016]/20 bg-transparent text-[#1a1a1a] text-base
                              placeholder:text-[#9b9b9b] focus:outline-none focus:border-[#2d5016]/50 transition-colors"
                 />
               </div>
-              {/* 朱砂色发送验证码按钮 */}
-              <button
-                onClick={handleSendOTP}
-                disabled={sending || otpSent}
-                className="btn-seal px-3 py-2 text-xs whitespace-nowrap disabled:opacity-50 transition-all"
-              >
-                {sending ? '...' : otpSent ? '已发送' : '获取验证码'}
-              </button>
-            </div>
-          </div>
+            )}
 
-          {/* 验证码输入 */}
-          {otpSent && (
-            <div className="mb-5">
-              <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                placeholder="请输入验证码"
-                maxLength={6}
-                className="w-full px-0 py-2 border-0 border-b border-[#2d5016]/20 bg-transparent text-[#1a1a1a] text-center text-lg tracking-[8px]
-                           placeholder:text-[#9b9b9b] placeholder:tracking-normal focus:outline-none focus:border-[#2d5016]/50 transition-colors"
-              />
-              {/* 竹绿渐变大登录按钮 */}
-              <button
-                onClick={handleVerify}
-                disabled={verifying}
-                className="btn-bamboo w-full py-3 mt-4 text-base disabled:opacity-50 transition-all active:scale-95"
-              >
-                {verifying ? '验证中...' : '登录'}
-              </button>
-            </div>
-          )}
+            {/* 错误提示 */}
+            {error && (
+              <p className="text-sm text-[#c0392b] text-center mb-3">
+                {error}
+              </p>
+            )}
 
-          {/* 错误提示 */}
-          {error && (
-            <p className="text-sm text-[#c0392b] text-center mb-3">
-              {error}
-            </p>
-          )}
+            {/* 成功提示 */}
+            {success && (
+              <p className="text-sm text-[#27ae60] text-center mb-3">
+                {success}
+              </p>
+            )}
 
-          {/* 分隔线 */}
-          <div className="flex items-center my-5">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#2d5016]/15 to-transparent" />
-            <span className="px-3 text-[11px] text-[#9b9b9b]">或</span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#2d5016]/15 to-transparent" />
-          </div>
-
-          {/* 微信登录 */}
-          <button
-            onClick={handleWechat}
-            className="w-full py-2.5 rounded-xl text-white font-semibold text-sm
-                       bg-[#07c160] active:scale-95 transition-all shadow-md"
-          >
-            微信一键登录
-          </button>
+            {/* 主按钮 — 竹绿渐变 */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-bamboo w-full py-3 mt-2 text-base disabled:opacity-50 transition-all active:scale-95"
+            >
+              {loading ? '处理中...' : tab === 'login' ? '登录' : '注册'}
+            </button>
+          </form>
         </div>
 
         {/* 游客入口 — 底部淡灰文字 */}

@@ -6,9 +6,8 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   isGuest: boolean
-  signInWithPhone: (phone: string) => Promise<{ error?: string }>
-  verifyOTP: (phone: string, token: string) => Promise<{ error?: string }>
-  signInWithWechat: () => Promise<{ error?: string }>
+  signUpWithEmail: (email: string, password: string) => Promise<{ error?: string }>
+  signInWithEmail: (email: string, password: string) => Promise<{ error?: string }>
   signOut: () => Promise<void>
   enterGuestMode: () => void
 }
@@ -31,7 +30,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 获取当前会话
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      // 注意：如果无 session，不设 isGuest=true！让 App.tsx 守卫自动显示登录页
       setLoading(false)
     })
 
@@ -46,26 +44,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signInWithPhone = useCallback(async (phone: string) => {
-    if (!supabase) return { error: '未配置云服务' }
-    const { error } = await supabase.auth.signInWithOtp({ phone })
+  const signUpWithEmail = useCallback(async (email: string, password: string) => {
+    if (!supabase) return { error: '未配置云端服务' }
+    const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) return { error: error.message }
+    // 如果 Supabase 开启了邮箱确认，用户不会立即有 session
+    if (data.user && !data.session) {
+      return { error: '__email_confirm__' }
+    }
     return {}
   }, [])
 
-  const verifyOTP = useCallback(async (phone: string, token: string) => {
-    if (!supabase) return { error: '未配置云服务' }
-    const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
-    if (error) return { error: error.message }
-    return {}
-  }, [])
-
-  const signInWithWechat = useCallback(async () => {
-    if (!supabase) return { error: '未配置云服务' }
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github', // 占位：实际部署时替换为微信 provider
-      options: { redirectTo: window.location.origin }
-    })
+  const signInWithEmail = useCallback(async (email: string, password: string) => {
+    if (!supabase) return { error: '未配置云端服务' }
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) return { error: error.message }
     return {}
   }, [])
@@ -85,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, loading, isGuest,
-      signInWithPhone, verifyOTP, signInWithWechat, signOut, enterGuestMode
+      signUpWithEmail, signInWithEmail, signOut, enterGuestMode
     }}>
       {children}
     </AuthContext.Provider>
